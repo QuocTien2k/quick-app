@@ -6,9 +6,7 @@ const userModel = require("../models/user");
 router.get("/get-logged-user", protect, async (req, res) => {
   try {
     // Tìm người dùng theo userId nhưng không lấy trường password
-    const user = await userModel
-      .findOne({ _id: req.user.id })
-      .select("-password");
+    const user = await userModel.findOne({ _id: req.user.id });
 
     if (!user) {
       return res.status(404).send({
@@ -34,9 +32,7 @@ router.get("/get-logged-user", protect, async (req, res) => {
 router.get("/get-all-users", protect, async (req, res) => {
   try {
     // Lấy tất cả user, nhưng loại bỏ user đang đăng nhập
-    const otherUsers = await userModel
-      .find({ _id: { $ne: req.user.id } }) // $ne = not equal (không bằng)
-      .select("-password"); // Không trả về mật khẩu
+    const otherUsers = await userModel.find({ _id: { $ne: req.user.id } }); // $ne = not equal (không bằng)
 
     res.status(200).send({
       message: "Lấy danh sách người dùng (trừ bạn) thành công",
