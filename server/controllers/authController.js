@@ -1,6 +1,9 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const userModel = require("../models/user");
+
+//route signup
 router.post("/signup", async (req, res) => {
   try {
     //1. If user already exists
@@ -29,6 +32,50 @@ router.post("/signup", async (req, res) => {
   } catch (error) {
     res.status(400).send({
       message: `Đăng ký thất bại : ${error.message}`,
+      success: false,
+    });
+  }
+});
+
+//route login
+router.post("/login", async (req, res) => {
+  try {
+    //1.check user exists
+    const user = await userModel.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(400).send({
+        message: "Email không tồn tại hoặc chưa đăng ký",
+        success: false,
+      });
+    }
+
+    //2. check password is correct
+    const isValid = await bcrypt.compare(req.body.password, user.password);
+    if (!isValid) {
+      return res.status(400).send({
+        message: "Mật khẩu không đúng",
+        success: false,
+      });
+    }
+
+    //3. login success + assign token
+    const token = jwt.sign({ userId: user._id }, process.env.SECRET_KEY, {
+      expiresIn: "10d",
+    });
+
+    res.status(200).send({
+      message: "Đăng nhập thành công",
+      success: true,
+      user: {
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+      },
+      token: token,
+    });
+  } catch (error) {
+    res.status(400).send({
+      message: `Đăng nhập thất bại : ${error.message}`,
       success: false,
     });
   }
