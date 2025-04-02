@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const protect = require("../middlewares/authMiddleware");
 const userModel = require("../models/user");
+
 //get details of current logged-in user:
 router.get("/get-logged-user", protect, async (req, res) => {
   try {
@@ -17,9 +18,56 @@ router.get("/get-logged-user", protect, async (req, res) => {
     }
 
     res.status(200).send({
-      message: "Lấy thông tin thành công",
+      message: "Lấy thông tin user đăng nhập thành công",
       success: true,
       data: user,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Lỗi : " + error.message,
+      success: false,
+    });
+  }
+});
+
+//get all users excluding the currently logged-in user
+router.get("/get-all-users", protect, async (req, res) => {
+  try {
+    // Lấy tất cả user, nhưng loại bỏ user đang đăng nhập
+    const otherUsers = await userModel
+      .find({ _id: { $ne: req.user.id } }) // $ne = not equal (không bằng)
+      .select("-password"); // Không trả về mật khẩu
+
+    res.status(200).send({
+      message: "Lấy danh sách người dùng (trừ bạn) thành công",
+      success: true,
+      data: otherUsers,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Lỗi: " + error.message,
+      success: false,
+    });
+  }
+});
+
+//get list users from mongodb
+router.get("/listUsers", async (req, res) => {
+  try {
+    // Lấy danh sách tất cả người dùng nhưng không lấy trường password
+    const allUsers = await userModel.find({}).select("-password");
+
+    if (!allUsers || allUsers.length === 0) {
+      return res.status(404).send({
+        message: "Không tìm thấy danh sách người dùng",
+        success: false,
+      });
+    }
+
+    res.status(200).send({
+      message: "Lấy thông tin danh sách người dùng thành công",
+      success: true,
+      data: allUsers,
     });
   } catch (error) {
     res.status(500).send({
