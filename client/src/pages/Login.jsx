@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { loginUser } from '../apiCalls/auth';
 
 const Login = () => {
     const [user, setUser] = useState({
@@ -7,10 +8,26 @@ const Login = () => {
         password: ''
     })
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        // Xử lý đăng nhập ở đây
-        console.log(user);
+        //console.log(user);
+
+        try {
+            const response = await loginUser(user);
+            // console.log("Server response:", response)
+            // console.log("response message:", response?.message)
+            console.log("response token:", response?.token)
+
+
+            if (response?.success) {
+                alert(response?.message);
+                localStorage.setItem('token', response?.token);
+                window.location.href = '/'
+            }
+        } catch (error) {
+            alert(error?.response?.data?.message || "Có lỗi xảy ra!");
+            console.error("Lỗi đăng nhập ", error);
+        }
     };
 
     return (

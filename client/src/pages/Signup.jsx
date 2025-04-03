@@ -9,7 +9,7 @@ const Signup = () => {
         email: '',
         password: '',
     });
-    //const navigate = useNavigate();
+    const navigate = useNavigate();
 
     const handleSignup = async (e) => {
         e.preventDefault();
@@ -20,7 +20,9 @@ const Signup = () => {
 
             if (response?.success) {
                 alert(response.message);
-
+                setTimeout(() => {
+                    navigate('/login');
+                }, 800)
             } else {
                 alert(response?.message || "Đăng ký thất bại!");
             }
