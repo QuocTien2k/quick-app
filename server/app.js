@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const authController = require("./controllers/authController");
 const userController = require("./controllers/userController");
+const chatController = require("./controllers/chatController");
 
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
@@ -9,5 +10,6 @@ app.use(express.json());
 //use auth, user controller
 app.use("/api/auth", authController);
 app.use("/api/user", userController);
+app.use("/api/chat", chatController);
 
 module.exports = app;
