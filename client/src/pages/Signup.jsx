@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { signupUser } from "../apiCalls/auth";
 
 const Signup = () => {
     const [user, setUser] = useState({
@@ -8,10 +9,25 @@ const Signup = () => {
         email: '',
         password: '',
     });
+    //const navigate = useNavigate();
 
-    const handleSignup = (e) => {
+    const handleSignup = async (e) => {
         e.preventDefault();
-        console.log(user);
+        //console.log(user);
+
+        try {
+            const response = await signupUser(user); // Gọi API signup
+
+            if (response?.success) {
+                alert(response.message);
+
+            } else {
+                alert(response?.message || "Đăng ký thất bại!");
+            }
+        } catch (error) {
+            alert(error?.message || "Có lỗi xảy ra!");
+            console.error(error);
+        }
     }
     return (
         <>
