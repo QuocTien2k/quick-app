@@ -39,9 +39,13 @@ router.post("/signup", async (req, res) => {
 
 //route login
 router.post("/login", async (req, res) => {
+  //console.log("Request body:", req.body);
   try {
     //1.check user exists
-    const user = await userModel.findOne({ email: req.body.email });
+    const user = await userModel
+      .findOne({ email: req.body.email })
+      .select("+password");
+    //console.log("User data from database:", user);
     if (!user) {
       return res.status(400).send({
         message: "Email không tồn tại hoặc chưa đăng ký",
@@ -51,6 +55,7 @@ router.post("/login", async (req, res) => {
 
     //2. check password is correct
     const isValid = await bcrypt.compare(req.body.password, user.password);
+    //console.log("Password comparison:", isValid);
     if (!isValid) {
       return res.status(400).send({
         message: "Mật khẩu không đúng",
