@@ -8,7 +8,7 @@ const messageController = require("./controllers/messageController");
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
 
-//use auth, user controller
+//use auth, user, chat, message controller
 app.use("/api/auth", authController);
 app.use("/api/user", userController);
 app.use("/api/chat", chatController);
