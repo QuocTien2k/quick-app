@@ -3,6 +3,7 @@ const protect = require("../middlewares/authMiddleware");
 const Chat = require("../models/chat");
 const Message = require("../models/message");
 
+//create message
 router.post("/new-message", protect, async (req, res) => {
   try {
     const { chatId, sender, text } = req.body;
@@ -42,4 +43,34 @@ router.post("/new-message", protect, async (req, res) => {
   }
 });
 
+//get message from collection (~~ table) chat
+router.get("/get-all-messages/:chatId", protect, async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    // Kiểm tra chatId có hợp lệ không
+    if (!chatId) {
+      return res.status(400).send({
+        message: "Thiếu chatId!",
+        success: false,
+      });
+    }
+
+    // Lấy tất cả tin nhắn của cuộc trò chuyện và sắp xếp theo thời gian
+    const allMessages = await Message.find({ chatId })
+      .sort({ createdAt: 1 })
+      .populate("sender", "firstname lastname email"); // Lấy thông tin người gửi
+
+    res.status(200).send({
+      message: "Lấy tin nhắn thành công!",
+      success: true,
+      data: allMessages,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Lấy tin nhắn thất bại! " + error.message,
+      success: false,
+    });
+  }
+});
 module.exports = router;
