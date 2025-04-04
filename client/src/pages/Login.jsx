@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { loginUser } from '../apiCalls/auth';
-
+import { toast } from 'react-hot-toast';
 const Login = () => {
     const [user, setUser] = useState({
         email: '',
@@ -11,21 +11,25 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         //console.log(user);
+        let response = null;
 
         try {
-            const response = await loginUser(user);
+            response = await loginUser(user);
             // console.log("Server response:", response)
-            // console.log("response message:", response?.message)
-            console.log("response token:", response?.token)
+            //console.log("response message:", response?.message)
+            //console.log("response token:", response?.token)
 
 
             if (response?.success) {
-                alert(response?.message);
+                toast.success(response?.message);
+                // Lưu token vào localStorage
                 localStorage.setItem('token', response?.token);
                 window.location.href = '/'
+            } else {
+                toast.error(response?.message);
             }
         } catch (error) {
-            alert(error?.response?.data?.message || "Có lỗi xảy ra!");
+            toast.error(response?.message || "Có lỗi xảy ra!");
             console.error("Lỗi đăng nhập ", error);
         }
     };

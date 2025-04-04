@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { signupUser } from "../apiCalls/auth";
+import toast from "react-hot-toast";
 
 const Signup = () => {
     const [user, setUser] = useState({
@@ -14,20 +15,21 @@ const Signup = () => {
     const handleSignup = async (e) => {
         e.preventDefault();
         //console.log(user);
+        let response = null;
 
         try {
-            const response = await signupUser(user); // Gọi API signup
+            response = await signupUser(user); // Gọi API signup
 
             if (response?.success) {
-                alert(response.message);
+                toast.success(response?.message);
                 setTimeout(() => {
                     navigate('/login');
                 }, 800)
             } else {
-                alert(response?.message || "Đăng ký thất bại!");
+                toast.error(response?.message || "Đăng ký thất bại!");
             }
         } catch (error) {
-            alert(error?.message || "Có lỗi xảy ra!");
+            toast.error(response?.message || "Có lỗi xảy ra!");
             console.error(error);
         }
     }
