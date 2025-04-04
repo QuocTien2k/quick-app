@@ -2,19 +2,22 @@ import { useEffect, useState } from "react";
 import { getListUsers, getAllUsers, getLoggedUser } from "../apiCalls/users";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { hideLoader, showLoader } from "../redux/loaderSlice";
-import { getAllChats } from "../apiCalls/chat";
+import { createNewChat, getAllChats } from "../apiCalls/chat";
 import { setAllChats } from "../redux/usersSlice";
 
 const Home = () => {
     const [listUsers, setListUsers] = useState([]);
-    // const { user } = useSelector((state) => state.user.user);
+    const { allChats } = useSelector((state) => state.user?.allChats);
     const dispatch = useDispatch();
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const [token, setToken] = useState(localStorage.getItem("token"));
     const [currentUser, setCurrentUser] = useState(null);
+
+    // const userState = useSelector((state) => state.user); 
+    // console.log("User state:", userState); 
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -72,10 +75,11 @@ const Home = () => {
     if (error) return <div className="p-4 text-red-500">{error}</div>;
 
     // Xử lý chat
-    const handleChat = async (user) => {
+    const handleChat = async (userId) => {
         // Kiểm tra xem người dùng đã đăng nhập chưa
         if (currentUser) {
-            console.log("Chat với người dùng có ID: ", user);
+            //console.log("Chat với người dùng có ID: ", userId);
+            startNewChat(currentUser._id, userId);
         } else {
             toast.error("Vui lòng đăng nhập để trò chuyện!");
         }
@@ -93,6 +97,36 @@ const Home = () => {
         } catch (error) {
             toast.error("Lỗi khi lấy danh sách chat!");
             console.error("Lỗi khi lấy danh sách chat:", error);
+        }
+    }
+
+    //tạo chat với 2 user
+    const startNewChat = async (userId_1, userId_2) => {
+        try {
+            dispatch(showLoader());
+            const response = await createNewChat([userId_1, userId_2]);
+            dispatch(hideLoader());
+
+            if (response?.success) {
+                console.log("Tạo chat thành công:", response?.data);
+                toast.success(response?.message);
+                const newChat = response?.data;
+
+                // Kiểm tra xem cuộc trò chuyện đã tồn tại trong Redux chưa
+                const isChatExists = allChats?.some(chat =>
+                    chat.members.includes(userId_1) && chat.members.includes(userId_2)
+                );
+
+                if (!isChatExists) {
+                    dispatch(setAllChats([...(allChats || []), newChat])); // Cập nhật Redux
+                } else {
+                    console.log(response?.data?.message);
+                    toast.error(response?.data?.message || "Cuộc trò chuyện đã tồn tại!");
+                }
+            }
+        } catch (error) {
+            toast.error(error.message);
+            console.error("Lỗi khi tạo chat:", error);
         }
     }
 
