@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { hideLoader, showLoader } from "../redux/loaderSlice";
+import { getAllChats } from "../apiCalls/chat";
+import { setAllChats } from "../redux/usersSlice";
 
 const Home = () => {
     const [listUsers, setListUsers] = useState([]);
@@ -36,7 +38,7 @@ const Home = () => {
                     } else {
                         throw new Error(usersRes?.message);
                     }
-
+                    getCurrentChat(); // Gọi hàm lấy danh sách chat hiện tại
                 } else {
                     // Nếu không có token, lấy toàn bộ danh sách
                     const usersRes = await getListUsers();
@@ -79,6 +81,21 @@ const Home = () => {
         }
     }
     //console.log(currentUser);
+
+    //lấy danh sách mà currentUser đã chat
+    const getCurrentChat = async () => {
+        try {
+            const response = await getAllChats();
+            //console.log("Danh sách chat:", response?.data);
+            if (response?.success) {
+                dispatch(setAllChats(response?.data));
+            }
+        } catch (error) {
+            toast.error("Lỗi khi lấy danh sách chat!");
+            console.error("Lỗi khi lấy danh sách chat:", error);
+        }
+    }
+
     return (
         <>
             <div className="p-4">
