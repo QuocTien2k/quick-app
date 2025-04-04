@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { loginUser } from '../apiCalls/auth';
 import { toast } from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { hideLoader, showLoader } from '../redux/loaderSlice';
 const Login = () => {
     const [user, setUser] = useState({
         email: '',
         password: ''
     })
+    const dispatch = useDispatch();
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -14,7 +17,9 @@ const Login = () => {
         let response = null;
 
         try {
+            dispatch(showLoader());
             response = await loginUser(user);
+            dispatch(hideLoader());
             // console.log("Server response:", response)
             //console.log("response message:", response?.message)
             //console.log("response token:", response?.token)
@@ -31,6 +36,7 @@ const Login = () => {
         } catch (error) {
             toast.error(response?.message || "Có lỗi xảy ra!");
             console.error("Lỗi đăng nhập ", error);
+            dispatch(hideLoader());
         }
     };
 

@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { getListUsers, getAllUsers, getLoggedUser } from "../apiCalls/users";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { hideLoader, showLoader } from "../redux/loaderSlice";
 
 const Home = () => {
     const [listUsers, setListUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const dispatch = useDispatch();
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const [token, setToken] = useState(localStorage.getItem("token"));
@@ -13,7 +15,7 @@ const Home = () => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                setLoading(true);
+                dispatch(showLoader());
                 setError("");
 
                 if (token) {
@@ -24,12 +26,14 @@ const Home = () => {
                     }
 
                     // Nếu token hợp lệ, lấy danh sách trừ user hiện tại
+
                     const usersRes = await getAllUsers();
                     if (usersRes.success) {
                         setListUsers(usersRes?.data);
                     } else {
                         throw new Error(usersRes?.message);
                     }
+
                 } else {
                     // Nếu không có token, lấy toàn bộ danh sách
                     const usersRes = await getListUsers();
@@ -50,7 +54,7 @@ const Home = () => {
                     navigate("/login");
                 }
             } finally {
-                setLoading(false);
+                dispatch(hideLoader());
             }
 
         };
@@ -59,12 +63,10 @@ const Home = () => {
     }, [token, navigate]);
 
     // Hiển thị khi đang tải dữ liệu hoặc có lỗi
-    if (loading) return <div className="p-4">Đang tải...</div>;
     if (error) return <div className="p-4 text-red-500">{error}</div>;
 
     // Xử lý chat
     const handleChat = async (user) => {
-
         if (token) {
             console.log("Mở chat với: ", user)
         } else {
@@ -72,9 +74,23 @@ const Home = () => {
         }
     }
 
-
     return (
         <div className="p-4">
+            {!token ? (
+                <button
+                    onClick={() => navigate("/login")}
+                    className="cursor-pointer px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                >
+                    Đăng nhập
+                </button>
+            ) : (
+                <button
+                    onClick={() => console.log("Đăng xuất")}
+                    className="cursor-pointer px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                >
+                    Đăng xuất
+                </button>
+            )}
             <h1 className="text-2xl font-bold mb-6">Danh sách người dùng</h1>
             {listUsers.length === 0 ? (
                 <p>Không có người dùng nào.</p>
