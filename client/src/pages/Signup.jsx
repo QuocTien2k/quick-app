@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { signupUser } from "../apiCalls/auth";
 import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { hideLoader, showLoader } from "../redux/loaderSlice";
 
 const Signup = () => {
     const [user, setUser] = useState({
@@ -11,6 +13,7 @@ const Signup = () => {
         password: '',
     });
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const handleSignup = async (e) => {
         e.preventDefault();
@@ -18,8 +21,10 @@ const Signup = () => {
         let response = null;
 
         try {
-            response = await signupUser(user); // Gọi API signup
+            dispatch(showLoader());
 
+            response = await signupUser(user); // Gọi API signup
+            dispatch(hideLoader());
             if (response?.success) {
                 toast.success(response?.message);
                 setTimeout(() => {
@@ -31,6 +36,7 @@ const Signup = () => {
         } catch (error) {
             toast.error(response?.message || "Có lỗi xảy ra!");
             console.error(error);
+            dispatch(hideLoader());
         }
     }
     return (
