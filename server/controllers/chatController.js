@@ -57,7 +57,8 @@ router.get("/get-all-chats", protect, async (req, res) => {
     const userId = req.user.id; // Lấy userId từ middleware authMiddleware
     const allChats = await Chat.find({ members: userId })
       .populate("members", "firstname lastname email") // Lấy thông tin user
-      .populate("lastMessage"); // Lấy thông tin tin nhắn cuối cùng
+      .populate("lastMessage") // Lấy thông tin tin nhắn cuối cùng
+      .sort({ updatedAt: -1 }); // Sắp xếp theo thời gian cập nhật gần nhất
 
     res.status(201).send({
       message: `Lấy danh sách chat của ${userId} thành công!`,
