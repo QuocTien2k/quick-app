@@ -27,9 +27,9 @@ router.post("/create-new-chat", protect, async (req, res) => {
     const existingChat = await Chat.findOne({ members: { $all: members } });
 
     if (existingChat) {
-      return res.status(400).send({
+      return res.status(200).send({
         message: "Cuộc trò chuyện đã tồn tại!",
-        success: false,
+        success: true,
         data: existingChat,
       });
     }

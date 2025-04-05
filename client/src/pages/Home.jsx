@@ -5,7 +5,8 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { hideLoader, showLoader } from "../redux/loaderSlice";
 import { createNewChat, getAllChats } from "../apiCalls/chat";
-import { setAllChats } from "../redux/usersSlice";
+import { setAllChats, setSelectedChat } from "../redux/usersSlice";
+import ChatArea from "../components/chat";
 
 const Home = () => {
     const [listUsers, setListUsers] = useState([]);
@@ -75,15 +76,28 @@ const Home = () => {
     if (error) return <div className="p-4 text-red-500">{error}</div>;
 
     // Xử lý chat
-    const handleChat = async (userId) => {
-        // Kiểm tra xem người dùng đã đăng nhập chưa
-        if (currentUser) {
-            //console.log("Chat với người dùng có ID: ", userId);
-            startNewChat(currentUser._id, userId);
-        } else {
+    const openChat = async (selectedUserId) => {
+        if (!currentUser) {
             toast.error("Vui lòng đăng nhập để trò chuyện!");
+            return;
         }
-    }
+
+        // Tìm xem đã có cuộc trò chuyện chưa
+        const chat = allChats?.find(chat =>
+            chat.members.includes(currentUser._id) && chat.members.includes(selectedUserId)
+        );
+
+        if (chat) {
+            dispatch(setSelectedChat(chat)); // Nếu đã có cuộc trò chuyện, chỉ cần mở nó
+            toast.success("Đã mở cuộc trò chuyện!");
+        } else {
+            const newChat = await startNewChat(currentUser._id, selectedUserId);
+            if (newChat) {
+                dispatch(setSelectedChat(newChat));
+            }
+        }
+    };
+
     //console.log(currentUser);
 
     //lấy danh sách mà currentUser đã chat
@@ -102,33 +116,35 @@ const Home = () => {
 
     //tạo chat với 2 user
     const startNewChat = async (userId_1, userId_2) => {
+        let response = null;
         try {
             dispatch(showLoader());
-            const response = await createNewChat([userId_1, userId_2]);
+            response = await createNewChat([userId_1, userId_2]);
             dispatch(hideLoader());
 
             if (response?.success) {
+                const newChat = response.data;
                 console.log("Tạo chat thành công:", response?.data);
                 toast.success(response?.message);
-                const newChat = response?.data;
 
-                // Kiểm tra xem cuộc trò chuyện đã tồn tại trong Redux chưa
-                const isChatExists = allChats?.some(chat =>
-                    chat.members.includes(userId_1) && chat.members.includes(userId_2)
-                );
-
-                if (!isChatExists) {
-                    dispatch(setAllChats([...(allChats || []), newChat])); // Cập nhật Redux
-                } else {
-                    console.log(response?.data?.message);
-                    toast.error(response?.data?.message || "Cuộc trò chuyện đã tồn tại!");
+                // Gộp luôn vào danh sách nếu chưa có
+                const allChatsArray = Array.isArray(allChats) ? allChats : [];
+                const isChatInRedux = allChatsArray?.some(chat => chat._id === newChat._id);
+                if (!isChatInRedux) {
+                    const updateChat = [...allChatsArray, newChat];
+                    dispatch(setAllChats(updateChat));
+                    dispatch(setSelectedChat(newChat)); // Mở chat mới ngay lập tức
                 }
+
+                return newChat;
             }
         } catch (error) {
+            dispatch(hideLoader());
             toast.error(error.message);
             console.error("Lỗi khi tạo chat:", error);
+            return null;
         }
-    }
+    };
 
     return (
         <>
@@ -169,7 +185,7 @@ const Home = () => {
                             <div
                                 key={user._id}
                                 className="bg-white border rounded-lg shadow-md p-4 hover:shadow-lg transition cursor-pointer"
-                                onClick={() => handleChat(user._id)}
+                                onClick={() => openChat(user._id)}
                             >
                                 <div className="flex items-center space-x-4 mb-3">
                                     <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-600">
@@ -185,6 +201,9 @@ const Home = () => {
                         ))}
                     </div>
                 )}
+
+                <ChatArea />
+                {/* Hiển thị khu vực chat */}
             </div>
         </>
     );
