@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { hideLoader, showLoader } from "../redux/loaderSlice";
 import { createNewChat, getAllChats } from "../apiCalls/chat";
-import { setAllChats, setSelectedChat } from "../redux/usersSlice";
+import { setAllChats, setAllUsers, setSelectedChat, setUser } from "../redux/usersSlice";
 import ChatArea from "../components/chat";
 
 const Home = () => {
@@ -16,6 +16,7 @@ const Home = () => {
     const navigate = useNavigate();
     const [token, setToken] = useState(localStorage.getItem("token"));
     const [currentUser, setCurrentUser] = useState(null);
+    const { selectedChat } = useSelector((state) => state.user);
 
     // const userState = useSelector((state) => state.user); 
     // console.log("User state:", userState); 
@@ -32,21 +33,26 @@ const Home = () => {
                     if (!loggedUserRes?.success) {
                         throw new Error("Token không hợp lệ, vui lòng đăng nhập lại.");
                     }
+                    // Lưu thông tin người dùng hiện tại vào Redux
+                    dispatch(setUser(loggedUserRes?.data)); // Dispatch thông tin người dùng vào Redux
                     setCurrentUser(loggedUserRes?.data); // Lưu thông tin người dùng hiện tại
 
                     // Nếu token hợp lệ, lấy danh sách trừ user hiện tại
                     const usersRes = await getAllUsers();
                     if (usersRes.success) {
+                        dispatch(setAllUsers(usersRes?.data));
                         setListUsers(usersRes?.data);
 
                     } else {
                         throw new Error(usersRes?.message);
                     }
                     getCurrentChat(); // Gọi hàm lấy danh sách chat hiện tại
+                    //dispatch(setAllUsers(usersRes.data));
                 } else {
                     // Nếu không có token, lấy toàn bộ danh sách
                     const usersRes = await getListUsers();
                     if (usersRes.success) {
+                        dispatch(setAllUsers(usersRes.data));  // Dispatch vào Redux
                         setListUsers(usersRes.data);
 
                     } else {
@@ -70,7 +76,7 @@ const Home = () => {
         };
 
         fetchUsers(); // Gọi API khi component mount hoặc token thay đổi
-    }, [token, navigate]);
+    }, [token, navigate, dispatch]);
 
     // Hiển thị khi đang tải dữ liệu hoặc có lỗi
     if (error) return <div className="p-4 text-red-500">{error}</div>;
@@ -84,7 +90,7 @@ const Home = () => {
 
         // Tìm xem đã có cuộc trò chuyện chưa
         const chat = allChats?.find(chat =>
-            chat.members.includes(currentUser._id) && chat.members.includes(selectedUserId)
+            chat.members.map(m => m._id).includes(currentUser._id) && chat.members.map(m => m._id).includes(selectedUserId)
         );
 
         if (chat) {
@@ -192,7 +198,7 @@ const Home = () => {
                                         {user.firstname?.charAt(0).toUpperCase() || "?"}
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-semibold">Xin chào,{user.lastname} {user.firstname}</h2>
+                                        <h2 className="text-lg font-semibold">Xin chào,{user.firstname} {user.lastname}</h2>
                                         <p className="text-sm text-gray-600">{user.email}</p>
                                     </div>
                                 </div>
@@ -202,8 +208,8 @@ const Home = () => {
                     </div>
                 )}
 
-                <ChatArea />
-                {/* Hiển thị khu vực chat */}
+                {selectedChat && <ChatArea />}
+
             </div>
         </>
     );
