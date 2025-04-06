@@ -130,7 +130,7 @@ const Home = () => {
 
             if (response?.success) {
                 const newChat = response.data;
-                console.log("Tạo chat thành công:", response?.data);
+                //console.log("Tạo chat thành công:", response?.data);
                 toast.success(response?.message);
 
                 // Gộp luôn vào danh sách nếu chưa có
