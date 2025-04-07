@@ -2,7 +2,7 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { createNewMessage, getAllMessages } from "../apiCalls/message";
 import { hideLoader, showLoader } from "../redux/loaderSlice";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
 import { clearUnreadMessageCount } from "../apiCalls/chat";
 
@@ -11,7 +11,6 @@ const ChatArea = () => {
     const [message, setMessage] = useState("");
     const [allMessages, setAllMessages] = useState([]);
     const { selectedChat, allUsers, user, allChats } = useSelector((state) => state.user);
-    const bottomRef = useRef(null);
     //console.log("selectedChat: ", selectedChat);
     //console.log("danh sách users: ", allUsers);
     //console.log("Thông tin user hiện tại: ", user);
@@ -65,7 +64,7 @@ const ChatArea = () => {
         }
     }
 
-    //call api get all messages
+    //call api clear unread messages
     const clearUnreadMessages = async () => {
         try {
             dispatch(showLoader());
@@ -92,13 +91,10 @@ const ChatArea = () => {
         if (selectedChat?._id) {
             getMessages(); // Gọi API chỉ khi selectedChat thay đổi
         }
-        clearUnreadMessages();
+        if (selectedChat?.lastMessage?.sender !== user._id) {
+            clearUnreadMessages();
+        }
     }, [selectedChat]);
-
-    // Scroll to bottom mỗi khi có tin nhắn mới
-    useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [allMessages]);
 
     //console.log("Tất cả tin nhắn: ", allMessages);
 
@@ -115,7 +111,7 @@ const ChatArea = () => {
             </div>
 
             {/* Chat messages */}
-            <div className="h-96 overflow-y-auto p-4 space-y-2 bg-gray-50 border rounded shadow-inner scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+            <div className="h-96 overflow-y-scroll p-4 space-y-2 bg-gray-50 border rounded shadow-inner scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
                 {allMessages?.map((message) => {
                     const isSender = message.sender._id === user._id;
 
@@ -136,8 +132,6 @@ const ChatArea = () => {
                         </div>
                     );
                 })}
-                {/* 👇 Auto scroll target */}
-                <div ref={bottomRef} />
             </div>
             {/* Send message */}
             <div className="mt-4 flex gap-2">

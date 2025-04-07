@@ -1,1 +1,32 @@
 @import "tailwindcss";
+
+@keyframes pulseRing {
+    0% {
+        transform: scale(0.6);
+        opacity: 0.8;
+        box-shadow: 0 0 0 0 rgba(169, 169, 169, 0.5);
+        /* Màu xám */
+    }
+
+    50% {
+        transform: scale(0.8);
+        opacity: 0.4;
+        box-shadow: 0 0 10px 10px rgba(169, 169, 169, 0.5);
+        /* Màu xám */
+    }
+
+    100% {
+        transform: scale(0.6);
+        opacity: 0;
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    }
+}
+
+.animate-pulse-ring {
+    animation: pulseRing 2s ease-out infinite;
+    display: inline-block;
+    padding: 0.1rem;
+    /* Điều chỉnh padding nếu cần */
+    border-radius: 9999px;
+    /* Để làm emoji hoặc background hình tròn */
+}

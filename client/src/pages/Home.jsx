@@ -7,6 +7,7 @@ import { hideLoader, showLoader } from "../redux/loaderSlice";
 import { createNewChat, getAllChats } from "../apiCalls/chat";
 import { setAllChats, setAllUsers, setSelectedChat, setUser } from "../redux/usersSlice";
 import ChatArea from "../components/chat";
+import MessageNotification from "../components/MessageNotification";
 
 const Home = () => {
     const [listUsers, setListUsers] = useState([]);
@@ -163,6 +164,18 @@ const Home = () => {
         }
     }
 
+    //lấy tin nhắn chưa đọc
+    const getUnreadMessageCount = (userId) => {
+        const chat = allChats.find(chat =>
+            chat.members.map(m => m._id).includes(userId)
+        )
+
+        if (chat && chat.unreadMessageCount && chat.lastMessage.sender !== currentUser._id) {
+            return chat.unreadMessageCount
+        } else {
+            return "";
+        }
+    }
 
     return (
         <>
@@ -179,13 +192,23 @@ const Home = () => {
                         <h3 className="text-xl font-semibold text-blue-600 flex items-center gap-2">
                             👋 Xin chào, <span className="text-gray-800">{currentUser.firstname} {currentUser.lastname}</span>!
                         </h3>
-                        <button
-                            onClick={() => console.log("Đăng xuất")}
-                            className="cursor-pointer px-5 py-2 bg-red-600 text-white font-medium rounded-lg shadow-md 
+                        <div className="flex items-center justify-between gap-1">
+
+                            {/* 1 cái chuông thông báo tin nhắn chưa đọc */}
+                            <MessageNotification
+                                listUsers={listUsers}
+                                getUnreadMessageCount={getUnreadMessageCount}
+                                getLastMessage={getLastMessage}
+                                openChat={openChat}
+                            />
+                            <button
+                                onClick={() => console.log("Đăng xuất")}
+                                className="cursor-pointer px-5 py-2 bg-red-600 text-white font-medium rounded-lg shadow-md 
                    hover:bg-red-700 hover:shadow-lg transition-all duration-300"
-                        >
-                            Đăng xuất
-                        </button>
+                            >
+                                Đăng xuất
+                            </button>
+                        </div>
                     </div>
 
                 )}
@@ -217,14 +240,14 @@ const Home = () => {
                                 </div>
                                 {/* Bạn có thể thêm nhiều thông tin hơn tại đây */}
 
-                                {getLastMessage(user._id, user.lastname) && (<div>
+                                {/* {getLastMessage(user._id, user.lastname) && (<div>
                                     <p className="text-sm text-gray-500 flex items-center gap-1">
                                         <span className="text-xs">
                                             {getLastMessage(user._id, user.lastname)}
                                         </span>
                                         <span className="text-[12px] animate-bounce">💬</span>
                                     </p>
-                                </div>)}
+                                </div>)} */}
 
                             </div>
                         ))}
