@@ -21,3 +21,17 @@ export const createNewChat = async (members) => {
     throw new Error(error.response?.data?.message || "Lỗi khi tạo chat!");
   }
 };
+
+export const clearUnreadMessageCount = async (chatId) => {
+  let response = null;
+  try {
+    response = await axiosInstance.post("/api/chat/clear-unread-message", {
+      chatId: chatId,
+    });
+    return response?.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Lỗi khi xóa thông báo chưa đọc!"
+    );
+  }
+};

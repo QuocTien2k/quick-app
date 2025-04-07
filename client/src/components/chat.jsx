@@ -4,12 +4,13 @@ import { createNewMessage, getAllMessages } from "../apiCalls/message";
 import { hideLoader, showLoader } from "../redux/loaderSlice";
 import { useEffect, useRef, useState } from "react";
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
+import { clearUnreadMessageCount } from "../apiCalls/chat";
 
 const ChatArea = () => {
     const dispatch = useDispatch();
     const [message, setMessage] = useState("");
     const [allMessages, setAllMessages] = useState([]);
-    const { selectedChat, allUsers, user } = useSelector((state) => state.user);
+    const { selectedChat, allUsers, user, allChats } = useSelector((state) => state.user);
     const bottomRef = useRef(null);
     //console.log("selectedChat: ", selectedChat);
     //console.log("danh sách users: ", allUsers);
@@ -64,10 +65,34 @@ const ChatArea = () => {
         }
     }
 
+    //call api get all messages
+    const clearUnreadMessages = async () => {
+        try {
+            dispatch(showLoader());
+            const response = await clearUnreadMessageCount(selectedChat._id);
+            dispatch(hideLoader());
+
+            if (response?.success) {
+                allChats.map(chat => {
+                    if (chat._id === selectedChat._id) {
+                        return response.data;
+                    }
+                    return chat;
+                })
+            }
+            //console.log("Tất cả tin nhắn: ", response.data);
+        } catch (error) {
+            dispatch(hideLoader());
+            console.error("Lỗi xóa tin nhắn: ", error);
+            toast.error(error.message || "Lỗi xóa tin nhắn")
+        }
+    }
+
     useEffect(() => {
         if (selectedChat?._id) {
             getMessages(); // Gọi API chỉ khi selectedChat thay đổi
         }
+        clearUnreadMessages();
     }, [selectedChat]);
 
     // Scroll to bottom mỗi khi có tin nhắn mới
