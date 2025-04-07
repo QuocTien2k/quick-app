@@ -10,13 +10,12 @@ import ChatArea from "../components/chat";
 
 const Home = () => {
     const [listUsers, setListUsers] = useState([]);
-    const { allChats } = useSelector((state) => state.user?.allChats);
     const dispatch = useDispatch();
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const [token, setToken] = useState(localStorage.getItem("token"));
     const [currentUser, setCurrentUser] = useState(null);
-    const { selectedChat } = useSelector((state) => state.user);
+    const { selectedChat, allChats } = useSelector((state) => state.user);
 
     // const userState = useSelector((state) => state.user); 
     // console.log("User state:", userState); 
@@ -152,6 +151,19 @@ const Home = () => {
         }
     };
 
+    //lấy tin nhắn cuối cùng của cuộc trò chuyện
+    const getLastMessage = (userId, userLastname) => {
+        const chat = allChats?.find(chat => chat.members.map(m => m._id).includes(userId));
+
+        if (!chat || !chat.lastMessage) {
+            return "";
+        } else {
+            const msgPrefix = chat?.lastMessage?.sender === currentUser._id ? "Bạn: " : `Tin nhắn từ ${userLastname}: `;
+            return msgPrefix + chat?.lastMessage?.text?.substring(0, 20);
+        }
+    }
+
+
     return (
         <>
             <div className="p-4">
@@ -192,6 +204,7 @@ const Home = () => {
                                 key={user._id}
                                 className="bg-white border rounded-lg shadow-md p-4 hover:shadow-lg transition cursor-pointer"
                                 onClick={() => openChat(user._id)}
+
                             >
                                 <div className="flex items-center space-x-4 mb-3">
                                     <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-600">
@@ -203,6 +216,16 @@ const Home = () => {
                                     </div>
                                 </div>
                                 {/* Bạn có thể thêm nhiều thông tin hơn tại đây */}
+
+                                {getLastMessage(user._id, user.lastname) && (<div>
+                                    <p className="text-sm text-gray-500 flex items-center gap-1">
+                                        <span className="text-xs">
+                                            {getLastMessage(user._id, user.lastname)}
+                                        </span>
+                                        <span className="text-[12px] animate-bounce">💬</span>
+                                    </p>
+                                </div>)}
+
                             </div>
                         ))}
                     </div>

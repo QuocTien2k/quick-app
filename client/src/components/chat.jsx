@@ -11,14 +11,16 @@ const ChatArea = () => {
     const [allMessages, setAllMessages] = useState([]);
     const { selectedChat, allUsers, user } = useSelector((state) => state.user);
     const bottomRef = useRef(null);
-    //console.log("selectedChat: ", selectedChat._id);
-    // console.log("danh sách users: ", allUsers);
+    //console.log("selectedChat: ", selectedChat);
+    //console.log("danh sách users: ", allUsers);
     //console.log("Thông tin user hiện tại: ", user);
 
-    const selectedUserId = selectedChat?.members?.find((member) => member !== user?._id);
+    const selectedUserId = selectedChat?.members?.find((member) => member._id !== user._id)?._id;
+    //console.log("ID người dùng được chọn: ", selectedUserId);
 
     // Search user from allUsers on ID
-    const selectedUser = allUsers?.find((user) => user._id === selectedUserId);
+    const selectedUser = allUsers.find((user) => user._id === selectedUserId);
+    //console.log("Người dùng được chọn: ", selectedUser);
 
     //call api create message
     const sendMessage = async () => {
@@ -63,9 +65,15 @@ const ChatArea = () => {
     }
 
     useEffect(() => {
-        getMessages(); // Gọi hàm lấy tin nhắn khi component mount
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" }); // Scroll to bottom when messages change
-    }, [selectedChat, allMessages]); // callback when selectedChat change
+        if (selectedChat?._id) {
+            getMessages(); // Gọi API chỉ khi selectedChat thay đổi
+        }
+    }, [selectedChat]);
+
+    // Scroll to bottom mỗi khi có tin nhắn mới
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [allMessages]);
 
     //console.log("Tất cả tin nhắn: ", allMessages);
 
