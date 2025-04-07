@@ -173,7 +173,7 @@ const Home = () => {
         if (chat && chat.unreadMessageCount && chat.lastMessage.sender !== currentUser._id) {
             return chat.unreadMessageCount
         } else {
-            return "";
+            return 0;
         }
     }
 

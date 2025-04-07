@@ -1,16 +1,26 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const MessageNotification = ({ listUsers, getUnreadMessageCount, getLastMessage, openChat }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [filteredUsers, setFilteredUsers] = useState([]);
 
     // Lọc những người có tin nhắn cuối cùng
-    const filteredUsers = listUsers.filter(user => {
-        return getLastMessage(user._id, user.lastname); // Kiểm tra xem có tin nhắn cuối cùng không
-    });
+    // Khởi tạo danh sách khi listUsers thay đổi
+    useEffect(() => {
+        const usersWithMessages = listUsers.filter(user =>
+            getLastMessage(user._id, user.lastname)
+        );
+        setFilteredUsers(usersWithMessages);
+    }, [listUsers, getLastMessage]);
 
     const handleClick = (selectedUserId) => {
         openChat(selectedUserId);  // Gọi hàm openChat khi click vào người dùng
         setIsDropdownOpen(false);  // Đóng dropdown sau khi chọn
+
+        // Xoá người đã đọc khỏi danh sách filteredUsers
+        setFilteredUsers(prev =>
+            prev.filter(user => user._id !== selectedUserId)
+        );
     };
 
     return (

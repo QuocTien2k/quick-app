@@ -5,6 +5,9 @@ import { hideLoader, showLoader } from "../redux/loaderSlice";
 import { useEffect, useState } from "react";
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
 import { clearUnreadMessageCount } from "../apiCalls/chat";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheckCircle } from '@fortawesome/free-solid-svg-icons'
+import { setAllChats } from "../redux/usersSlice";
 
 const ChatArea = () => {
     const dispatch = useDispatch();
@@ -72,12 +75,13 @@ const ChatArea = () => {
             dispatch(hideLoader());
 
             if (response?.success) {
-                allChats.map(chat => {
+                const updatedChats = allChats.map(chat => {
                     if (chat._id === selectedChat._id) {
                         return response.data;
                     }
                     return chat;
-                })
+                });
+                dispatch(setAllChats(updatedChats))
             }
             //console.log("Tất cả tin nhắn: ", response.data);
         } catch (error) {
@@ -96,7 +100,7 @@ const ChatArea = () => {
         }
     }, [selectedChat]);
 
-    //console.log("Tất cả tin nhắn: ", allMessages);
+    console.log("Tất cả tin nhắn: ", allMessages);
 
     return (
         <>
@@ -127,6 +131,9 @@ const ChatArea = () => {
                                 <p className="break-words">{message.text}</p>
                                 <span className={`text-xs block mt-1 ${isSender ? 'text-right' : 'text-left'} opacity-70`}>
                                     {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    {isSender && message.read && (
+                                        <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 text-sm ml-1" />
+                                    )}
                                 </span>
                             </div>
                         </div>
