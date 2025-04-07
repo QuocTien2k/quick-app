@@ -2,7 +2,7 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { createNewMessage, getAllMessages } from "../apiCalls/message";
 import { hideLoader, showLoader } from "../redux/loaderSlice";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
 
 const ChatArea = () => {
@@ -10,6 +10,7 @@ const ChatArea = () => {
     const [message, setMessage] = useState("");
     const [allMessages, setAllMessages] = useState([]);
     const { selectedChat, allUsers, user } = useSelector((state) => state.user);
+    const bottomRef = useRef(null);
     //console.log("selectedChat: ", selectedChat._id);
     // console.log("danh sách users: ", allUsers);
     //console.log("Thông tin user hiện tại: ", user);
@@ -63,7 +64,8 @@ const ChatArea = () => {
 
     useEffect(() => {
         getMessages(); // Gọi hàm lấy tin nhắn khi component mount
-    }, [selectedChat]); // callback when selectedChat change
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" }); // Scroll to bottom when messages change
+    }, [selectedChat, allMessages]); // callback when selectedChat change
 
     //console.log("Tất cả tin nhắn: ", allMessages);
 
@@ -80,7 +82,7 @@ const ChatArea = () => {
             </div>
 
             {/* Chat messages */}
-            <div className="h-96 overflow-y-auto p-4 space-y-2 bg-gray-50 border rounded shadow-inner">
+            <div className="h-96 overflow-y-auto p-4 space-y-2 bg-gray-50 border rounded shadow-inner scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
                 {allMessages?.map((message) => {
                     const isSender = message.sender._id === user._id;
 
@@ -101,8 +103,9 @@ const ChatArea = () => {
                         </div>
                     );
                 })}
+                {/* 👇 Auto scroll target */}
+                <div ref={bottomRef} />
             </div>
-
             {/* Send message */}
             <div className="mt-4 flex gap-2">
                 <input
