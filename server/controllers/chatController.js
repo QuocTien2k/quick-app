@@ -38,6 +38,7 @@ router.post("/create-new-chat", protect, async (req, res) => {
     //Tạo mới chat
     const chat = new Chat({ members });
     const savedChat = await chat.save();
+    await savedChat.populate("members");
 
     res.status(201).send({
       message: "Tạo chat thành công!",
