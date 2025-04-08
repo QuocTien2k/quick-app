@@ -100,7 +100,8 @@ const ChatArea = () => {
         }
     }, [selectedChat]);
 
-    console.log("Tất cả tin nhắn: ", allMessages);
+    //console.log("Tất cả tin nhắn: ", allMessages);
+    console.log("Danh sách tin nhắn: ", allChats)
 
     return (
         <>

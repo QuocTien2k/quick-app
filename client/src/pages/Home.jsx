@@ -90,13 +90,32 @@ const Home = () => {
 
         // Tìm xem đã có cuộc trò chuyện chưa
         const chat = allChats?.find(chat =>
-            chat.members.map(m => m._id).includes(currentUser._id) && chat.members.map(m => m._id).includes(selectedUserId)
+            chat.members.map(m => m._id).includes(currentUser._id) &&
+            chat.members.map(m => m._id).includes(selectedUserId)
         );
 
         if (chat) {
-            dispatch(setSelectedChat(chat)); // Nếu đã có cuộc trò chuyện, chỉ cần mở nó
+            dispatch(setSelectedChat(chat)); // Mở cuộc trò chuyện
+
+            // ✅ Cập nhật Redux: đánh dấu đã đọc
+            const updatedChats = allChats.map(c => {
+                if (c._id === chat._id) {
+                    return {
+                        ...c,
+                        lastMessage: {
+                            ...c.lastMessage,
+                            read: true,
+                        },
+                        unreadMessageCount: 0,
+                    };
+                }
+                return c;
+            });
+
+            dispatch(setAllChats(updatedChats)); // Cập nhật lại Redux state
             toast.success("Đã mở cuộc trò chuyện!");
         } else {
+            // Nếu chưa có chat → tạo mới
             const newChat = await startNewChat(currentUser._id, selectedUserId);
             if (newChat) {
                 dispatch(setSelectedChat(newChat));
@@ -176,6 +195,8 @@ const Home = () => {
             return 0;
         }
     }
+
+    console.log("Danh sách tin nhắn: ", allChats)
 
     return (
         <>
