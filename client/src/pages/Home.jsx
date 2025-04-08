@@ -230,6 +230,7 @@ const Home = () => {
                                 getUnreadMessageCount={getUnreadMessageCount}
                                 getLastMessage={getLastMessage}
                                 openChat={openChat}
+                                socket={socket}
                             />
                             <button
                                 onClick={() => console.log("Đăng xuất")}

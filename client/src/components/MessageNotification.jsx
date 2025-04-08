@@ -1,7 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setAllChats } from '../redux/usersSlice';
 
-const MessageNotification = ({ listUsers, getUnreadMessageCount, getLastMessage, openChat }) => {
+const MessageNotification = ({ listUsers, getUnreadMessageCount, getLastMessage, openChat, socket }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dispatch = useDispatch();
+    const { selectedChat, allChats } = useSelector((state) => state.user);
+    const selectedChatRef = useRef(selectedChat);
+    const allChatsRef = useRef(allChats);
+    // console.log(selectedChat);
+    // console.log(allChats);
+
+    useEffect(() => {
+        selectedChatRef.current = selectedChat;
+    }, [selectedChat]);
+
+    useEffect(() => {
+        allChatsRef.current = allChats;
+    }, [allChats]);
 
     const handleClick = (selectedUserId) => {
         openChat(selectedUserId);  // Gọi hàm openChat khi click vào người dùng
@@ -12,6 +28,36 @@ const MessageNotification = ({ listUsers, getUnreadMessageCount, getLastMessage,
     const usersWithMessages = listUsers.filter(user =>
         getLastMessage(user._id, user.lastname)
     );
+
+    //lắng nghe để theo dõi tin nhăn từ server
+    useEffect(() => {
+        const handleMessage = (message) => {
+            //console.log(message);
+
+            const selectChat = selectedChatRef.current;
+            const getAllChats = allChatsRef.current;
+
+            if (selectChat?._id !== message.chatId) {
+                const updatedChats = getAllChats.map(chat => {
+                    if (chat._id === message.chatId) {
+                        return {
+                            ...chat,
+                            unreadMessageCount: (chat?.unreadMessageCount || 0) + 1,
+                            lastMessage: message
+                        };
+                    }
+                    return chat;
+                });
+                dispatch(setAllChats(updatedChats));
+            }
+        };
+
+        socket.on("receive-message", handleMessage);
+
+        return () => {
+            socket.off("receive-message", handleMessage);
+        };
+    }, []);
 
     return (
         <div className="relative">

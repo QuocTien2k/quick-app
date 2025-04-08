@@ -116,10 +116,10 @@ const ChatArea = ({ socket }) => {
         }
 
         //tín hiệu nhận tin từ socket server
-        socket.off("receive-message").on("receive-message", (data) => {
+        socket.on("receive-message", (data) => {
             //console.log(data);
             const selectChat = selectedChat;
-            console.log(selectChat);
+            //console.log(selectChat);
             if (selectChat._id === data.chatId) {
                 setAllMessages(prevmsg => [...prevmsg, data]); //
             }
