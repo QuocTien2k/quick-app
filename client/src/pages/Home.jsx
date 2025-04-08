@@ -10,6 +10,7 @@ import ChatArea from "../components/chat";
 import MessageNotification from "../components/MessageNotification";
 import io from "socket.io-client"
 
+const socket = io("http://localhost:5000");
 const Home = () => {
     const [listUsers, setListUsers] = useState([]);
     const dispatch = useDispatch();
@@ -22,11 +23,9 @@ const Home = () => {
     // const userState = useSelector((state) => state.user); 
     // console.log("User state:", userState); 
 
-    const socket = io("http://localhost:5000");
-
     useEffect(() => {
         if (user) {
-            console.log("User hiện tại: ", user);
+            //console.log("User hiện tại: ", user);
             socket.emit("join-room", user._id);
         }
     }, [user]);
@@ -285,7 +284,7 @@ const Home = () => {
                     </div>
                 )}
 
-                {selectedChat && <ChatArea />}
+                {selectedChat && <ChatArea socket={socket} />}
 
             </div>
         </>

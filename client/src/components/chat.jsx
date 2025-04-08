@@ -8,13 +8,14 @@ import { clearUnreadMessageCount } from "../apiCalls/chat";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons'
 import { setAllChats } from "../redux/usersSlice";
+import moment from "moment";
 
-const ChatArea = () => {
+const ChatArea = ({ socket }) => {
     const dispatch = useDispatch();
     const [message, setMessage] = useState("");
     const [allMessages, setAllMessages] = useState([]);
     const { selectedChat, allUsers, user, allChats } = useSelector((state) => state.user);
-    //console.log("selectedChat: ", selectedChat);
+    //console.log("selectedChat: ", selectedChat.members);
     //console.log("danh sách users: ", allUsers);
     //console.log("Thông tin user hiện tại: ", user);
 
@@ -33,17 +34,22 @@ const ChatArea = () => {
                 sender: user._id,
                 text: message
             }
-            console.log("newMessage: ", newMessage);
-            dispatch(showLoader());
+            //console.log("newMessage: ", newMessage);
+
             const response = await createNewMessage(newMessage);
-            dispatch(hideLoader());
 
             // Check if the response is successful
             if (response?.success) {
                 setMessage(""); // Reset message input
+
+                socket.emit("send-message", {
+                    ...newMessage,
+                    members: selectedChat.members.map(m => m._id),
+                    read: false,
+                    createdAt: moment().format("DD-MM-YYYY hh:mm:ss")
+                })
             }
         } catch (error) {
-            dispatch(hideLoader());
             console.error("Error sending message:", error);
             toast.error("Lỗi khi gửi tin nhắn!", error.message);
         }
@@ -98,10 +104,17 @@ const ChatArea = () => {
         if (selectedChat?.lastMessage?.sender !== user._id) {
             clearUnreadMessages();
         }
+
+        //tín hiệu nhận tin từ socket server
+        socket.off("receive-message").on("receive-message", (data) => {
+            //console.log(data);
+            setAllMessages(prevmsg => [...prevmsg, data]); //
+        })
+
     }, [selectedChat]);
 
-    //console.log("Tất cả tin nhắn: ", allMessages);
-    console.log("Danh sách tin nhắn: ", allChats)
+    console.log("Tất cả tin nhắn: ", allMessages);
+    //console.log("Danh sách tin nhắn: ", allChats)
 
     return (
         <>
