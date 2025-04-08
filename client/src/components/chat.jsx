@@ -2,7 +2,7 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { createNewMessage, getAllMessages } from "../apiCalls/message";
 import { hideLoader, showLoader } from "../redux/loaderSlice";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
 import { clearUnreadMessageCount } from "../apiCalls/chat";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -15,6 +15,8 @@ const ChatArea = ({ socket }) => {
     const [message, setMessage] = useState("");
     const [allMessages, setAllMessages] = useState([]);
     const { selectedChat, allUsers, user, allChats } = useSelector((state) => state.user);
+    const messagesEndRef = useRef(null);
+
     //console.log("selectedChat: ", selectedChat.members);
     //console.log("danh sách users: ", allUsers);
     //console.log("Thông tin user hiện tại: ", user);
@@ -97,6 +99,14 @@ const ChatArea = ({ socket }) => {
         }
     }
 
+    //theo dõi để cuộn
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [allMessages]);
+
+    //theo dõi nhận tin
     useEffect(() => {
         if (selectedChat?._id) {
             getMessages(); // Gọi API chỉ khi selectedChat thay đổi
@@ -108,12 +118,16 @@ const ChatArea = ({ socket }) => {
         //tín hiệu nhận tin từ socket server
         socket.off("receive-message").on("receive-message", (data) => {
             //console.log(data);
-            setAllMessages(prevmsg => [...prevmsg, data]); //
+            const selectChat = selectedChat;
+            console.log(selectChat);
+            if (selectChat._id === data.chatId) {
+                setAllMessages(prevmsg => [...prevmsg, data]); //
+            }
         })
 
     }, [selectedChat]);
 
-    console.log("Tất cả tin nhắn: ", allMessages);
+    //console.log("Tất cả tin nhắn: ", allMessages);
     //console.log("Danh sách tin nhắn: ", allChats)
 
     return (
@@ -131,7 +145,8 @@ const ChatArea = ({ socket }) => {
             {/* Chat messages */}
             <div className="h-96 overflow-y-scroll p-4 space-y-2 bg-gray-50 border rounded shadow-inner scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
                 {allMessages?.map((message) => {
-                    const isSender = message.sender._id === user._id;
+                    const senderId = typeof message.sender === "object" ? message.sender._id : message.sender;
+                    const isSender = senderId === user._id;
 
                     return (
                         <div
@@ -153,7 +168,9 @@ const ChatArea = ({ socket }) => {
                         </div>
                     );
                 })}
+                <div ref={messagesEndRef} /> {/* Điểm đánh dấu để scroll tới */}
             </div>
+
             {/* Send message */}
             <div className="mt-4 flex gap-2">
                 <input
@@ -161,14 +178,25 @@ const ChatArea = ({ socket }) => {
                     placeholder="Nhập tin nhắn..."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && message.trim()) {
+                            sendMessage();
+                        }
+                    }}
                     className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
                 />
                 <button
                     onClick={sendMessage}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                    disabled={message.trim() === ""}
+                    className={`px-4 py-2 rounded transition 
+                    ${message.trim() === ""
+                            ? "bg-gray-300 cursor-not-allowed text-white"
+                            : "bg-blue-500 hover:bg-blue-600 text-white"
+                        }`}
                 >
                     <PaperAirplaneIcon className="h-5 w-5 rotate-[-30deg]" />
                 </button>
+
             </div>
 
         </>
