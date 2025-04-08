@@ -18,10 +18,25 @@ app.use(cors());
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
 
+const server = require("http").createServer(app);
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
+
 //use auth, user, chat, message controller
 app.use("/api/auth", authController);
 app.use("/api/user", userController);
 app.use("/api/chat", chatController);
 app.use("/api/message", messageController);
 
-module.exports = app;
+//TEST socket connection from client
+io.on("connection", (socket) => {
+  //console.log("Connected with socket id: ", socket.id);
+  socket.on("join-room", (userId) => {
+    console.log("User join room: " + userId);
+  });
+});
+module.exports = server;
