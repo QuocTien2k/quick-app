@@ -41,7 +41,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send-message", (message) => {
-    console.log("message nhận được: ", message);
+    //console.log("message nhận được: ", message);
     io.to(message.members[0]) //người gửi
       .to(message.members[1]) //người nhận
       .emit("receive-message", message);
