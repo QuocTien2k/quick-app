@@ -37,6 +37,14 @@ io.on("connection", (socket) => {
   //console.log("Connected with socket id: ", socket.id);
   socket.on("join-room", (userId) => {
     console.log("User join room: " + userId);
+    socket.join(userId);
+  });
+
+  socket.on("send-message", (message) => {
+    console.log("message nhận được: ", message);
+    io.to(message.members[0]) //người gửi
+      .to(message.members[1]) //người nhận
+      .emit("receive-message", message);
   });
 });
 module.exports = server;
