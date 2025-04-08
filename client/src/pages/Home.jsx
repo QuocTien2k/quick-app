@@ -8,6 +8,7 @@ import { createNewChat, getAllChats } from "../apiCalls/chat";
 import { setAllChats, setAllUsers, setSelectedChat, setUser } from "../redux/usersSlice";
 import ChatArea from "../components/chat";
 import MessageNotification from "../components/MessageNotification";
+import io from "socket.io-client"
 
 const Home = () => {
     const [listUsers, setListUsers] = useState([]);
@@ -16,10 +17,19 @@ const Home = () => {
     const navigate = useNavigate();
     const [token, setToken] = useState(localStorage.getItem("token"));
     const [currentUser, setCurrentUser] = useState(null);
-    const { selectedChat, allChats } = useSelector((state) => state.user);
+    const { selectedChat, allChats, user } = useSelector((state) => state.user);
 
     // const userState = useSelector((state) => state.user); 
     // console.log("User state:", userState); 
+
+    const socket = io("http://localhost:5000");
+
+    useEffect(() => {
+        if (user) {
+            console.log("User hiện tại: ", user);
+            socket.emit("join-room", user._id);
+        }
+    }, [user]);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -196,7 +206,7 @@ const Home = () => {
         }
     }
 
-    console.log("Danh sách tin nhắn: ", allChats)
+    //console.log("User hiện tại: ", user);
 
     return (
         <>
