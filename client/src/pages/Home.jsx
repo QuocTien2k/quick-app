@@ -9,6 +9,7 @@ import { setAllChats, setAllUsers, setSelectedChat, setUser } from "../redux/use
 import ChatArea from "../components/chat";
 import MessageNotification from "../components/MessageNotification";
 import io from "socket.io-client"
+import Profile from "./Profile";
 
 const socket = io("http://localhost:5000");
 const Home = () => {
@@ -20,6 +21,7 @@ const Home = () => {
     const [currentUser, setCurrentUser] = useState(null);
     const { selectedChat, allChats, user } = useSelector((state) => state.user);
     const [onlineUser, setOnlineUser] = useState()
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
     // const userState = useSelector((state) => state.user); 
     // console.log("User state:", userState); 
 
@@ -140,8 +142,6 @@ const Home = () => {
         }
     };
 
-    //console.log(currentUser);
-
     //lấy danh sách mà currentUser đã chat
     const getCurrentChat = async () => {
         try {
@@ -213,7 +213,13 @@ const Home = () => {
         }
     }
 
+    //xử lý khi update 
+    const handleAvatarClick = () => {
+        setIsProfileOpen(true);
+    };
+
     //console.log("User hiện tại: ", user);
+    console.log("User hiện tại: ", currentUser);
 
     return (
         <>
@@ -230,6 +236,28 @@ const Home = () => {
                         <h3 className="text-xl font-semibold text-blue-600 flex items-center gap-2">
                             👋 Xin chào, <span className="text-gray-800">{currentUser.firstname} {currentUser.lastname}</span>!
                         </h3>
+
+                        <div className="cursor-pointer" onClick={handleAvatarClick}>
+                            {currentUser.profilePic ? (
+                                // Hiển thị hình ảnh
+                                <div className="w-12 h-12 rounded-full overflow-hidden">
+                                    <img
+                                        src={currentUser.profilePic}
+                                        alt="User Avatar"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            ) : (
+                                // Nếu không có hình thì hiển thị chữ cái đầu
+                                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-600">
+                                    {currentUser.firstname?.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                        </div>
+
+                        {isProfileOpen && <Profile user={user} onClose={() => setIsProfileOpen(false)} />}
+
+                        {/* Notice and button logout */}
                         <div className="flex items-center justify-between gap-1">
 
                             {/* 1 cái chuông thông báo tin nhắn chưa đọc */}
