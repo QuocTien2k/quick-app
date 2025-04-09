@@ -6,9 +6,10 @@ import { useEffect, useRef, useState } from "react";
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
 import { clearUnreadMessageCount } from "../apiCalls/chat";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheckCircle } from '@fortawesome/free-solid-svg-icons'
+import { faCheckCircle, faFaceSmile } from '@fortawesome/free-solid-svg-icons'
 import { setAllChats, setSelectedChat } from "../redux/usersSlice";
 import moment from "moment";
+import EmojiPicker from "emoji-picker-react";
 
 const ChatArea = ({ socket, onlineUser }) => {
     const dispatch = useDispatch();
@@ -16,6 +17,7 @@ const ChatArea = ({ socket, onlineUser }) => {
     const [allMessages, setAllMessages] = useState([]);
     const { selectedChat, allUsers, user, allChats } = useSelector((state) => state.user);
     const messagesEndRef = useRef(null);
+    const [showEmoji, setShowEmoji] = useState(false);
 
     //console.log("selectedChat: ", selectedChat.members);
     //console.log("danh sách users: ", allUsers);
@@ -26,8 +28,8 @@ const ChatArea = ({ socket, onlineUser }) => {
 
     // Search user from allUsers on ID
     const selectedUser = allUsers.find((user) => user._id === selectedUserId);
-    console.log("Người dùng được chọn: ", selectedUser);
-    console.log("Danh sách user online: ", onlineUser);
+    // console.log("Người dùng được chọn: ", selectedUser);
+    // console.log("Danh sách user online: ", onlineUser);
 
 
     //call api create message
@@ -220,7 +222,23 @@ const ChatArea = ({ socket, onlineUser }) => {
             </div>
 
             {/* Gửi tin nhắn */}
-            <div className="mt-1 flex gap-2">
+            {/* Emoji Picker popover */}
+            {showEmoji && (
+                <div className="absolute bottom-16 right-4 z-50">
+                    <div className="shadow-lg border rounded-md overflow-hidden">
+                        <EmojiPicker
+                            height={300}
+                            width={280}
+                            onEmojiClick={(e) => {
+                                setMessage((prev) => prev + e.emoji);
+                                setShowEmoji(false); // tự ẩn sau khi chọn
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+
+            <div className="mt-1 flex gap-2 relative">
                 <input
                     type="text"
                     placeholder="Nhập tin nhắn..."
@@ -233,13 +251,24 @@ const ChatArea = ({ socket, onlineUser }) => {
                     }}
                     className="flex-1 border rounded px-3 py-1.5 text-sm focus:outline-none focus:ring focus:border-blue-300"
                 />
+
+                {/*btn select emoji */}
+                <button
+                    onClick={() => setShowEmoji(!showEmoji)}
+                    className="cursor-pointer px-2 text-gray-600 hover:text-yellow-500 transition"
+                    title="Chèn emoji"
+                >
+                    <FontAwesomeIcon icon={faFaceSmile} className="text-lg" />
+                </button>
+
+                {/*btn send message */}
                 <button
                     onClick={sendMessage}
                     disabled={message.trim() === ""}
                     className={`px-3 py-1.5 rounded transition text-sm
                         ${message.trim() === ""
                             ? "bg-gray-300 cursor-not-allowed text-white"
-                            : "bg-blue-500 hover:bg-blue-600 text-white"
+                            : "bg-blue-500 cursor-pointer hover:bg-blue-600 text-white"
                         }`}
                 >
                     <PaperAirplaneIcon className="h-4 w-4 rotate-[-30deg]" />
