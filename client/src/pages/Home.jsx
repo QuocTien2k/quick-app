@@ -19,17 +19,25 @@ const Home = () => {
     const [token, setToken] = useState(localStorage.getItem("token"));
     const [currentUser, setCurrentUser] = useState(null);
     const { selectedChat, allChats, user } = useSelector((state) => state.user);
-
+    const [onlineUser, setOnlineUser] = useState()
     // const userState = useSelector((state) => state.user); 
     // console.log("User state:", userState); 
 
+    //theo dõi trạng thái đăng nhập và gửi các event đến server
     useEffect(() => {
         if (user) {
             //console.log("User hiện tại: ", user);
             socket.emit("join-room", user._id);
+            socket.emit("user-login", user._id);
+
+            socket.on("online-users", onlineUsers => {
+                //console.log(onlineUsers);
+                setOnlineUser(onlineUsers);
+            })
         }
     }, [user]);
 
+    //kiểm tra token, lấy API danh sách 
     useEffect(() => {
         const fetchUsers = async () => {
             try {
@@ -285,7 +293,7 @@ const Home = () => {
                     </div>
                 )}
 
-                {selectedChat && <ChatArea socket={socket} />}
+                {selectedChat && <ChatArea onlineUser={onlineUser} socket={socket} />}
 
             </div>
         </>

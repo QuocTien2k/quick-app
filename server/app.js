@@ -32,14 +32,18 @@ app.use("/api/user", userController);
 app.use("/api/chat", chatController);
 app.use("/api/message", messageController);
 
+const onlineUsers = [];
 //TEST socket connection from client
 io.on("connection", (socket) => {
   //console.log("Connected with socket id: ", socket.id);
+
+  //lắng nghe client khi user đăng nhập từ browser, tham gia chat
   socket.on("join-room", (userId) => {
     console.log("User join room: " + userId);
     socket.join(userId);
   });
 
+  //lắng nghe gửi tin từ client và gửi lại tin để client nhận
   socket.on("send-message", (message) => {
     //console.log("message nhận được: ", message);
     io.to(message.members[0]) //người gửi
@@ -47,11 +51,21 @@ io.on("connection", (socket) => {
       .emit("receive-message", message);
   });
 
+  //lắng nghe gửi tin chưa đọc từ client và gửi lại tin khi đã đọc
   socket.on("clear-unread-messages", (data) => {
     //console.log(data);
     io.to(data.members[0])
       .to(data.members[1])
       .emit("message-count-cleared", data);
+  });
+
+  //lắng nghe client có user online, gửi lên cho client array user online
+  socket.on("user-login", (userId) => {
+    if (!onlineUsers.includes(userId)) {
+      onlineUsers.push(userId);
+    }
+    console.log("Danh sách user online: ", onlineUsers);
+    socket.emit("online-users", onlineUsers);
   });
 });
 module.exports = server;

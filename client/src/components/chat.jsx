@@ -10,7 +10,7 @@ import { faCheckCircle } from '@fortawesome/free-solid-svg-icons'
 import { setAllChats, setSelectedChat } from "../redux/usersSlice";
 import moment from "moment";
 
-const ChatArea = ({ socket }) => {
+const ChatArea = ({ socket, onlineUser }) => {
     const dispatch = useDispatch();
     const [message, setMessage] = useState("");
     const [allMessages, setAllMessages] = useState([]);
@@ -26,7 +26,9 @@ const ChatArea = ({ socket }) => {
 
     // Search user from allUsers on ID
     const selectedUser = allUsers.find((user) => user._id === selectedUserId);
-    //console.log("Người dùng được chọn: ", selectedUser);
+    console.log("Người dùng được chọn: ", selectedUser);
+    console.log("Danh sách user online: ", onlineUser);
+
 
     //call api create message
     const sendMessage = async () => {
@@ -163,28 +165,33 @@ const ChatArea = ({ socket }) => {
     //console.log("Danh sách tin nhắn: ", allChats)
 
     return (
-        <>
-            {/* Title */}
-            <h2 className="text-xl font-semibold my-2">Component Chat Area</h2>
-
-            {/* Chat with who? */}
-            <div className="w-full mx-auto mb-2 text-gray-700 text-center text-2xl">
-                {selectedChat && (
-                    <div className="flex items-center justify-center gap-4 mb-2">
-                        <p>💬 Chat với <span className="font-medium">{selectedUser.firstname} {selectedUser.lastname}</span></p>
-                        <button
-                            onClick={() => dispatch(setSelectedChat(null))}
-                            className="cursor-pointer text-sm text-red-500 hover:shadow"
-                        >
-                            ❌
-                        </button>
+        <div className="fixed bottom-4 right-4 w-[320px] sm:w-[360px] h-[360px] bg-white rounded-lg shadow-lg flex flex-col p-3 z-50">
+            {/* Chat với ai */}
+            {selectedChat && (
+                <div className="flex items-center justify-between text-white text-sm font-medium px-3 py-2 rounded-t-md bg-[#0084FF]">
+                    <div className="flex items-center gap-2">
+                        💬 Chat với
+                        <span className="flex items-center gap-1">
+                            {selectedUser.firstname} {selectedUser.lastname}
+                            {onlineUser?.includes(selectedUser._id) && (
+                                <span
+                                    className="w-2 h-2 rounded-full bg-green-500 animate-pulse"
+                                    title="Đang online"
+                                ></span>
+                            )}
+                        </span>
                     </div>
-                )}
+                    <button
+                        onClick={() => dispatch(setSelectedChat(null))}
+                        className="text-sm text-red-500 cursor-pointer"
+                    >
+                        ❌
+                    </button>
+                </div>
+            )}
 
-            </div>
-
-            {/* Chat messages */}
-            <div className="h-96 overflow-y-scroll p-4 space-y-2 bg-gray-50 border rounded shadow-inner scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+            {/* Khung chat */}
+            <div className="h-[50vh] overflow-y-auto p-3 bg-gray-50 border rounded shadow-inner scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 space-y-2">
                 {allMessages?.map((message) => {
                     const senderId = typeof message.sender === "object" ? message.sender._id : message.sender;
                     const isSender = senderId === user._id;
@@ -195,25 +202,25 @@ const ChatArea = ({ socket }) => {
                             className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
                         >
                             <div
-                                className={`max-w-xs md:max-w-sm p-3 rounded-lg shadow-sm
-                        ${isSender ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}
+                                className={`max-w-[75%] p-2 rounded-md text-sm shadow-sm 
+                                ${isSender ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}
                             >
                                 <p className="break-words">{message.text}</p>
-                                <span className={`text-xs block mt-1 ${isSender ? 'text-right' : 'text-left'} opacity-70`}>
+                                <span className={`text-[11px] block mt-1 ${isSender ? 'text-right' : 'text-left'} opacity-70`}>
                                     {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     {isSender && message.read && (
-                                        <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 text-sm ml-1" />
+                                        <FontAwesomeIcon icon={faCheckCircle} className="text-green-400 text-xs ml-1" />
                                     )}
                                 </span>
                             </div>
                         </div>
                     );
                 })}
-                <div ref={messagesEndRef} /> {/* Điểm đánh dấu để scroll tới */}
+                <div ref={messagesEndRef} />
             </div>
 
-            {/* Send message */}
-            <div className="mt-4 flex gap-2">
+            {/* Gửi tin nhắn */}
+            <div className="mt-1 flex gap-2">
                 <input
                     type="text"
                     placeholder="Nhập tin nhắn..."
@@ -224,24 +231,22 @@ const ChatArea = ({ socket }) => {
                             sendMessage();
                         }
                     }}
-                    className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
+                    className="flex-1 border rounded px-3 py-1.5 text-sm focus:outline-none focus:ring focus:border-blue-300"
                 />
                 <button
                     onClick={sendMessage}
                     disabled={message.trim() === ""}
-                    className={`px-4 py-2 rounded transition 
-                    ${message.trim() === ""
+                    className={`px-3 py-1.5 rounded transition text-sm
+                        ${message.trim() === ""
                             ? "bg-gray-300 cursor-not-allowed text-white"
                             : "bg-blue-500 hover:bg-blue-600 text-white"
                         }`}
                 >
-                    <PaperAirplaneIcon className="h-5 w-5 rotate-[-30deg]" />
+                    <PaperAirplaneIcon className="h-4 w-4 rotate-[-30deg]" />
                 </button>
-
             </div>
-
-        </>
-    )
+        </div>
+    );
 }
 
 export default ChatArea
