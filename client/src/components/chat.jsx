@@ -7,7 +7,7 @@ import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
 import { clearUnreadMessageCount } from "../apiCalls/chat";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheckCircle } from '@fortawesome/free-solid-svg-icons'
-import { setAllChats } from "../redux/usersSlice";
+import { setAllChats, setSelectedChat } from "../redux/usersSlice";
 import moment from "moment";
 
 const ChatArea = ({ socket }) => {
@@ -78,11 +78,15 @@ const ChatArea = ({ socket }) => {
     //call api clear unread messages
     const clearUnreadMessages = async () => {
         try {
-            dispatch(showLoader());
+
             const response = await clearUnreadMessageCount(selectedChat._id);
-            dispatch(hideLoader());
 
             if (response?.success) {
+                socket.emit("clear-unread-messages", {
+                    chatId: selectedChat._id,
+                    members: selectedChat.members.map(m => m._id)
+                })
+
                 const updatedChats = allChats.map(chat => {
                     if (chat._id === selectedChat._id) {
                         return response.data;
@@ -93,7 +97,6 @@ const ChatArea = ({ socket }) => {
             }
             //console.log("Tất cả tin nhắn: ", response.data);
         } catch (error) {
-            dispatch(hideLoader());
             console.error("Lỗi xóa tin nhắn: ", error);
             toast.error(error.message || "Lỗi xóa tin nhắn")
         }
@@ -115,15 +118,44 @@ const ChatArea = ({ socket }) => {
             clearUnreadMessages();
         }
 
-        //tín hiệu nhận tin từ socket server
-        socket.on("receive-message", (data) => {
-            //console.log(data);
-            const selectChat = selectedChat;
-            //console.log(selectChat);
-            if (selectChat._id === data.chatId) {
-                setAllMessages(prevmsg => [...prevmsg, data]); //
+        //xử lý nhận tin từ socket server
+        const handleReceiveMessage = (message) => {
+            //console.log(message);
+            if (selectedChat?._id === message.chatId) {
+                setAllMessages(prevmsg => [...prevmsg, message]);
             }
-        })
+
+            if (selectedChat?._id === message.chatId && message.sender !== user._id) {
+                clearUnreadMessages();
+            }
+        };
+
+        //xử lý tín hiệu xóa số lượng tin chưa đọc
+        const handleMessageCountCleared = (data) => {
+            //console.log(data);
+            if (selectedChat?._id === data.chatId) {
+                //updating unread message count in chat object
+                const updatedChats = allChats.map(chat =>
+                    chat._id === data.chatId ? { ...chat, unreadMessageCount: 0 } : chat
+                );
+                dispatch(setAllChats(updatedChats));
+
+                //updating read property message object
+                setAllMessages(prevMsgs =>
+                    prevMsgs.map(msg => ({ ...msg, read: true }))
+                );
+            }
+        };
+
+        //tín hiệu nhận tin từ socket server
+        socket.on("receive-message", handleReceiveMessage);
+        socket.on("message-count-cleared", handleMessageCountCleared);
+
+        // Cleanup listeners on unmount or selectedChat change
+        return () => {
+            socket.off("receive-message", handleReceiveMessage);
+            socket.off("message-count-cleared", handleMessageCountCleared);
+        };
 
     }, [selectedChat]);
 
@@ -138,8 +170,17 @@ const ChatArea = ({ socket }) => {
             {/* Chat with who? */}
             <div className="w-full mx-auto mb-2 text-gray-700 text-center text-2xl">
                 {selectedChat && (
-                    <p>💬 Chat với <span className="font-medium">{selectedUser.firstname} {selectedUser.lastname}</span></p>
+                    <div className="flex items-center justify-center gap-4 mb-2">
+                        <p>💬 Chat với <span className="font-medium">{selectedUser.firstname} {selectedUser.lastname}</span></p>
+                        <button
+                            onClick={() => dispatch(setSelectedChat(null))}
+                            className="cursor-pointer text-sm text-red-500 hover:shadow"
+                        >
+                            ❌
+                        </button>
+                    </div>
                 )}
+
             </div>
 
             {/* Chat messages */}
