@@ -13,6 +13,21 @@ export const createNewMessage = async (message) => {
   }
 };
 
+export const sendImageMessage = async (message) => {
+  try {
+    const response = await axiosInstance.post(
+      "/api/message/send-image-message",
+      message
+    );
+
+    return response?.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Lỗi khi gửi tin nhắn hình ảnh!"
+    );
+  }
+};
+
 export const getAllMessages = async (chatId) => {
   try {
     const response = await axiosInstance.get(

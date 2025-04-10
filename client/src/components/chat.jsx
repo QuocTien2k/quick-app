@@ -1,12 +1,12 @@
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { createNewMessage, getAllMessages } from "../apiCalls/message";
+import { createNewMessage, getAllMessages, sendImageMessage } from "../apiCalls/message";
 import { hideLoader, showLoader } from "../redux/loaderSlice";
 import { useEffect, useRef, useState } from "react";
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
 import { clearUnreadMessageCount } from "../apiCalls/chat";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheckCircle, faFaceSmile } from '@fortawesome/free-solid-svg-icons'
+import { faCheckCircle, faFaceSmile, faImage, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { setAllChats, setSelectedChat } from "../redux/usersSlice";
 import moment from "moment";
 import EmojiPicker from "emoji-picker-react";
@@ -18,6 +18,8 @@ const ChatArea = ({ socket, onlineUser }) => {
     const { selectedChat, allUsers, user, allChats } = useSelector((state) => state.user);
     const messagesEndRef = useRef(null);
     const [showEmoji, setShowEmoji] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+
 
     //console.log("selectedChat: ", selectedChat.members);
     //console.log("danh sách users: ", allUsers);
@@ -34,32 +36,47 @@ const ChatArea = ({ socket, onlineUser }) => {
 
     //call api create message
     const sendMessage = async () => {
+        if (!message.trim() && !selectedImage) return;
+
         try {
-            const newMessage = {
-                chatId: selectedChat._id,
-                sender: user._id,
-                text: message
+            let response;
+
+            if (selectedImage && !message.trim()) {
+                // Gửi ảnh: gọi API ảnh
+                const newImageMessage = {
+                    chatId: selectedChat._id,
+                    image: selectedImage,
+                };
+                response = await sendImageMessage(newImageMessage);
+            } else {
+                // Gửi text (hoặc text + ảnh, nếu bạn định gộp về sau)
+                const newTextMessage = {
+                    chatId: selectedChat._id,
+                    sender: user._id, // Nếu backend dùng protect, có thể bỏ dòng này
+                    text: message,
+                };
+                response = await createNewMessage(newTextMessage);
             }
-            //console.log("newMessage: ", newMessage);
 
-            const response = await createNewMessage(newMessage);
-
-            // Check if the response is successful
             if (response?.success) {
-                setMessage(""); // Reset message input
+                setMessage("");
+                setSelectedImage(null);
 
                 socket.emit("send-message", {
-                    ...newMessage,
-                    members: selectedChat.members.map(m => m._id),
+                    chatId: selectedChat._id,
+                    text: message,
+                    image: selectedImage,
+                    sender: user._id,
+                    members: selectedChat.members.map((m) => m._id),
                     read: false,
-                    createdAt: moment().format("DD-MM-YYYY hh:mm:ss")
-                })
+                    createdAt: moment().format("DD-MM-YYYY hh:mm:ss"),
+                });
             }
         } catch (error) {
             console.error("Error sending message:", error);
             toast.error("Lỗi khi gửi tin nhắn!", error.message);
         }
-    }
+    };
 
     //call api get all messages
     const getMessages = async () => {
@@ -103,6 +120,18 @@ const ChatArea = ({ socket, onlineUser }) => {
         } catch (error) {
             console.error("Lỗi xóa tin nhắn: ", error);
             toast.error(error.message || "Lỗi xóa tin nhắn")
+        }
+    }
+
+    //handle select image
+    const sendImage = async (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+
+        reader.readAsDataURL(file);
+
+        reader.onloadend = async () => {
+            setSelectedImage(reader.result);
         }
     }
 
@@ -207,7 +236,25 @@ const ChatArea = ({ socket, onlineUser }) => {
                                 className={`max-w-[75%] p-2 rounded-md text-sm shadow-sm 
                                 ${isSender ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}
                             >
-                                <p className="break-words">{message.text}</p>
+                                <div className="space-y-2">
+                                    {/* Nếu có text */}
+                                    {message.text && (
+                                        <p className="break-words text-sm text-gray-800">
+                                            {message.text}
+                                        </p>
+                                    )}
+
+                                    {/* Nếu có ảnh */}
+                                    {message.image && (
+                                        <div className="max-w-xs">
+                                            <img
+                                                src={message.image}
+                                                alt="sent"
+                                                className="rounded-lg shadow-md object-cover"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                                 <span className={`text-[11px] block mt-1 ${isSender ? 'text-right' : 'text-left'} opacity-70`}>
                                     {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     {isSender && message.read && (
@@ -237,36 +284,54 @@ const ChatArea = ({ socket, onlineUser }) => {
                     </div>
                 </div>
             )}
-
-            <div className="mt-1 flex gap-2 relative">
-                <input
-                    type="text"
+            <div className="mt-1 flex items-center gap-2 relative">
+                <textarea
+                    rows={1}
                     placeholder="Nhập tin nhắn..."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={(e) => {
-                        if (e.key === "Enter" && message.trim()) {
+                        if (e.key === "Enter" && !e.shiftKey && message.trim()) {
+                            e.preventDefault(); // chặn xuống dòng nếu chỉ nhấn Enter
                             sendMessage();
                         }
                     }}
-                    className="flex-1 border rounded px-3 py-1.5 text-sm focus:outline-none focus:ring focus:border-blue-300"
+                    className="flex-1 resize-none border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-300 overflow-hidden"
                 />
 
-                {/*btn select emoji */}
+                {/* Hidden input file */}
+                <input
+                    type="file"
+                    id="selectImage"
+                    accept="image/jpg, image/png, image/jpeg, image/gif, image/webp"
+                    className="hidden"
+                    onChange={sendImage}
+                />
+
+                {/* Icon chọn ảnh */}
+                <label
+                    htmlFor="selectImage"
+                    className="h-10 w-10 flex items-center justify-center text-gray-600 hover:text-blue-500 transition cursor-pointer"
+                    title="Chọn hình ảnh"
+                >
+                    <FontAwesomeIcon icon={faImage} className="text-lg" />
+                </label>
+
+                {/* Nút chọn emoji */}
                 <button
                     onClick={() => setShowEmoji(!showEmoji)}
-                    className="cursor-pointer px-2 text-gray-600 hover:text-yellow-500 transition"
+                    className="h-10 w-10 flex items-center justify-center text-gray-600 hover:text-yellow-500 transition"
                     title="Chèn emoji"
                 >
                     <FontAwesomeIcon icon={faFaceSmile} className="text-lg" />
                 </button>
 
-                {/*btn send message */}
+                {/* Nút gửi tin */}
                 <button
                     onClick={sendMessage}
-                    disabled={message.trim() === ""}
-                    className={`px-3 py-1.5 rounded transition text-sm
-                        ${message.trim() === ""
+                    disabled={message.trim() === "" && !selectedImage}
+                    className={`h-10 w-10 flex items-center justify-center rounded transition
+      ${message.trim() === "" && !selectedImage
                             ? "bg-gray-300 cursor-not-allowed text-white"
                             : "bg-blue-500 cursor-pointer hover:bg-blue-600 text-white"
                         }`}
@@ -274,6 +339,23 @@ const ChatArea = ({ socket, onlineUser }) => {
                     <PaperAirplaneIcon className="h-4 w-4 rotate-[-30deg]" />
                 </button>
             </div>
+            {/* Hiển thị ảnh đã chọn nếu có */}
+            {selectedImage && (
+                <div className="relative mt-2 ml-1">
+                    <img
+                        src={selectedImage}
+                        alt="Preview"
+                        className="w-32 h-32 object-cover rounded shadow"
+                    />
+                    <button
+                        onClick={() => setSelectedImage(null)}
+                        className="absolute top-1 right-1 bg-white bg-opacity-80 text-red-600 rounded-full p-1 hover:text-red-800"
+                        title="Xóa ảnh"
+                    >
+                        <FontAwesomeIcon icon={faTimes} />
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
