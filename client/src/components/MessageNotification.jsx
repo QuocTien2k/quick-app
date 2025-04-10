@@ -66,33 +66,47 @@ const MessageNotification = ({ listUsers, getUnreadMessageCount, getLastMessage,
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="cursor-pointer flex items-center gap-2"
             >
-                <span className={`text-lg ${usersWithMessages.some(user => getUnreadMessageCount(user._id) > 0) ? 'animate-pulse-ring' : ''}`}>
+                <span className={`text-xl ${usersWithMessages.some(user => getUnreadMessageCount(user._id) > 0) ? 'animate-pulse-ring' : ''}`}>
                     💬
                 </span>
-                {usersWithMessages.some(user => getUnreadMessageCount(user._id) > 0) ? (
-                    <span className="text-xs text-red-500">Tin nhắn mới</span>
-                ) : (
-                    <span className="text-xs text-gray-500">Không có tin nhắn mới</span>
-                )}
+                <span className={`text-sm ${usersWithMessages.some(user => getUnreadMessageCount(user._id) > 0) ? 'text-red-500' : 'text-gray-500'}`}>
+                    {usersWithMessages.some(user => getUnreadMessageCount(user._id) > 0)
+                        ? 'Tin nhắn mới'
+                        : 'Không có tin nhắn mới'}
+                </span>
             </div>
 
             {/* Dropdown List */}
             {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-md max-h-60 overflow-y-scroll">
-                    {usersWithMessages.map((user) => (
-                        <div key={user._id} className="p-2 hover:bg-gray-100">
-                            <div className="cursor-pointer flex justify-between items-center" onClick={() => handleClick(user._id)}>
-                                <span>{user.lastname}</span>
-                                {getUnreadMessageCount(user._id) > 0 && (
-                                    <div className="text-sm text-gray-500 flex items-center gap-1">
-                                        <span className="text-xs">
-                                            {getLastMessage(user._id, user.lastname)}
+                <div className="absolute right-0 mt-2 w-72 bg-white shadow-lg rounded-lg max-h-80 overflow-y-auto z-10">
+                    {usersWithMessages.length === 0 ? (
+                        <div className="p-4 text-sm text-gray-500 text-center">Không có cuộc trò chuyện nào</div>
+                    ) : (
+                        usersWithMessages.map((user) => (
+                            <div
+                                key={user._id}
+                                className="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b last:border-none"
+                                onClick={() => handleClick(user._id)}
+                            >
+                                <div className="flex justify-between items-start">
+                                    {/* Tên người gửi và tin nhắn cuối */}
+                                    <div className="flex flex-col">
+                                        <span className="font-medium text-sm text-gray-800">{user.lastname}</span>
+                                        <span className="text-xs text-gray-500 truncate max-w-[180px]">
+                                            {getLastMessage(user._id, user.lastname) || 'Chưa có tin nhắn'}
                                         </span>
                                     </div>
-                                )}
+
+                                    {/* Badge số lượng chưa đọc */}
+                                    {getUnreadMessageCount(user._id) > 0 && (
+                                        <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 h-fit ml-2">
+                                            {getUnreadMessageCount(user._id)}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
             )}
         </div>
