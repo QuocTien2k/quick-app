@@ -2,6 +2,7 @@ const router = require("express").Router();
 const protect = require("../middlewares/authMiddleware");
 const Chat = require("../models/chat");
 const Message = require("../models/message");
+const cloudinary = require("../cloudinary");
 
 //create message
 router.post("/new-message", protect, async (req, res) => {
@@ -31,13 +32,63 @@ router.post("/new-message", protect, async (req, res) => {
     );
 
     res.status(201).send({
-      message: "Tin nhắn gửi thành công!",
+      message: "Tạo tin nhắn thành công!",
       success: true,
       data: currentChat,
     });
   } catch (error) {
     res.status(400).send({
       message: "Tạo tin nhắn thất bại!" + error.message,
+      success: false,
+    });
+  }
+});
+
+// send image message
+router.post("/send-image-message", protect, async (req, res) => {
+  try {
+    const { chatId, image } = req.body;
+    const sender = req.user.id; // đã có từ middleware
+
+    if (!chatId || !image) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu chatId hoặc ảnh!",
+      });
+    }
+
+    // 1. Upload ảnh lên Cloudinary
+    const uploadedImage = await cloudinary.uploader.upload(image, {
+      folder: "message-image",
+    });
+
+    // 2. Tạo message mới chứa link ảnh
+    const newMessage = new Message({
+      chatId,
+      sender,
+      image: uploadedImage.secure_url,
+    });
+
+    const savedMessage = await newMessage.save();
+
+    // 3. Cập nhật lastMessage + unreadMessageCount trong Chat
+    const currentChat = await Chat.findOneAndUpdate(
+      { _id: chatId },
+      {
+        lastMessage: savedMessage._id,
+        $inc: { unreadMessageCount: 1 },
+      },
+      { new: true }
+    );
+
+    res.status(201).json({
+      message: "Gửi ảnh thành công!",
+      success: true,
+      data: currentChat,
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: "Gửi ảnh thất bại! " + error.message,
       success: false,
     });
   }

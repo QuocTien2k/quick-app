@@ -14,8 +14,13 @@ const messageSchema = new mongoose.Schema(
     },
     text: {
       type: String,
-      required: [true, "Tin nhắn không được để trống"], // Thêm thông báo lỗi
+      //required: [true, "Tin nhắn không được để trống"], // Thêm thông báo lỗi
+      required: false,
       trim: true,
+    },
+    image: {
+      type: String,
+      required: false,
     },
     read: {
       type: Boolean,
