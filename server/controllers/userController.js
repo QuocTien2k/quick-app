@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const cloudinary = require("../cloudinary");
 const protect = require("../middlewares/authMiddleware");
 const userModel = require("../models/user");
 
@@ -68,6 +69,39 @@ router.get("/listUsers", async (req, res) => {
   } catch (error) {
     res.status(500).send({
       message: "Lỗi : " + error.message,
+      success: false,
+    });
+  }
+});
+
+//upload image
+router.post("/upload-profile-pic", protect, async (req, res) => {
+  try {
+    const image = req.body.image;
+    if (!image) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Không có ảnh nào được gửi lên." });
+    }
+
+    const uploadedImage = await cloudinary.uploader.upload(image, {
+      folder: "quick-chat",
+    });
+
+    const user = await userModel.findByIdAndUpdate(
+      req.user.id, // lấy từ middleware
+      { profilePic: uploadedImage.secure_url },
+      { new: true }
+    );
+
+    res.status(201).send({
+      message: "Tải ảnh thành công",
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    res.status(400).send({
+      message: "Tải ảnh thất bại! " + error.message,
       success: false,
     });
   }
