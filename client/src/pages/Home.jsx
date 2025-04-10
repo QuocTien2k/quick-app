@@ -192,11 +192,21 @@ const Home = () => {
 
         if (!chat || !chat.lastMessage) {
             return "";
-        } else {
-            const msgPrefix = chat?.lastMessage?.sender === user._id ? "Bạn: " : `Tin nhắn từ ${userLastname}: `;
-            return msgPrefix + chat?.lastMessage?.text?.substring(0, 20);
         }
-    }
+
+        const isSender = chat?.lastMessage?.sender === user._id;
+        const prefix = isSender ? "Bạn: " : `Tin nhắn từ ${userLastname}: `;
+
+        // Nếu có text → cắt hiển thị, nếu không mà có ảnh → hiển thị fallback
+        const content = chat?.lastMessage?.text
+            ? chat.lastMessage.text.substring(0, 20)
+            : chat?.lastMessage?.image
+                ? "🖼️ Đã gửi một hình ảnh"
+                : "[Không có nội dung]";
+
+        return prefix + content;
+    };
+
 
     //lấy tin nhắn chưa đọc
     const getUnreadMessageCount = (userId) => {

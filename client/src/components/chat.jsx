@@ -10,6 +10,7 @@ import { faCheckCircle, faFaceSmile, faImage, faTimes } from '@fortawesome/free-
 import { setAllChats, setSelectedChat } from "../redux/usersSlice";
 import moment from "moment";
 import EmojiPicker from "emoji-picker-react";
+import imageCompression from "browser-image-compression";
 
 const ChatArea = ({ socket, onlineUser }) => {
     const dispatch = useDispatch();
@@ -73,7 +74,7 @@ const ChatArea = ({ socket, onlineUser }) => {
                 });
             }
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error("Error sending message:", error.message);
             toast.error("Lỗi khi gửi tin nhắn!", error.message);
         }
     };
@@ -126,12 +127,35 @@ const ChatArea = ({ socket, onlineUser }) => {
     //handle select image
     const sendImage = async (e) => {
         const file = e.target.files[0];
-        const reader = new FileReader();
 
-        reader.readAsDataURL(file);
+        if (!file) return;
 
-        reader.onloadend = async () => {
-            setSelectedImage(reader.result);
+        // Kiểm tra file quá lớn ngay từ đầu (ví dụ > 10MB thì bỏ qua luôn)
+        const MAX_FILE_MB = 10;
+        if (file.size / 1024 / 1024 > MAX_FILE_MB) {
+            toast.error("Ảnh quá lớn, vui lòng chọn ảnh nhỏ hơn 10MB!");
+            return;
+        }
+
+        try {
+            const options = {
+                maxSizeMB: 1, // nén xuống còn ~1MB
+                maxWidthOrHeight: 1024, // resize chiều dài tối đa
+                useWebWorker: true,
+            };
+
+            const compressedFile = await imageCompression(file, options);
+
+            // Convert sang base64 để upload như cũ
+            const reader = new FileReader();
+            reader.readAsDataURL(compressedFile);
+
+            reader.onloadend = () => {
+                setSelectedImage(reader.result); // giữ nguyên logic cũ
+            };
+        } catch (error) {
+            console.error("Lỗi khi nén ảnh:", error);
+            toast.error("Không thể nén ảnh!");
         }
     }
 
