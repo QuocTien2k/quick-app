@@ -312,6 +312,11 @@ const Home = () => {
                                                 src={user.profilePic}
                                                 alt="User Avatar"
                                                 className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    // Nếu lỗi thì xóa src để rơi vào trường hợp không có profilePic
+                                                    e.target.onerror = null; // tránh lặp vô hạn
+                                                    e.target.src = "https://img.icons8.com/?size=100&id=tZuAOUGm9AuS&format=png&color=000000"; // hoặc bạn có thể set một URL ảnh mặc định
+                                                }}
                                             />
                                         </div>
                                     ) : (
