@@ -1,25 +1,62 @@
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { uploadProfilePic } from "../apiCalls/users";
+import { setUser } from "../redux/usersSlice";
+import { useDispatch } from "react-redux";
+import { hideLoader, showLoader } from "../redux/loaderSlice";
 
 const Profile = ({ user, onClose }) => {
-    const formattedDate = new Date(user.createdAt).toLocaleDateString("vi-VN");
+    const dispatch = useDispatch();
     const [image, setImage] = useState("");
-
+    //console.log(user);
     useEffect(() => {
+
         if (user?.profilePic) {
             setImage(user.profilePic);
         }
     }, [user])
 
+    if (!user) return <p>Đang tải thông tin người dùng...</p>;
+    const formattedDate = new Date(user.createdAt).toLocaleDateString("vi-VN");
+
     const onFileSelect = async (e) => {
         const file = e.target.files[0];
-        const reader = new FileReader(file);
 
-        reader.readAsDataURL(file);
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Vui lòng chọn một tệp hình ảnh.");
+            return;
+        }
+
+        const reader = new FileReader();
 
         reader.onloadend = async () => {
             setImage(reader.result);
+        }
+
+        reader.readAsDataURL(file);
+    }
+
+    const uploadImage = async () => {
+        try {
+            dispatch(showLoader())
+            const response = await uploadProfilePic(image);
+            dispatch(hideLoader())
+            console.log(response);
+
+            if (response.success) {
+                toast.success(response.message);
+                dispatch(setUser(response.data));
+                onClose();
+            } else {
+                toast.error(response.message);
+            }
+        } catch (error) {
+            console.log("Lỗi tải ảnh: ", error.message);
+            toast.error(error.message)
         }
     }
 
@@ -73,13 +110,27 @@ const Profile = ({ user, onClose }) => {
                         onChange={onFileSelect}
                     />
 
-                    {/* Custom styled button */}
-                    <label
-                        htmlFor="avatarUpload"
-                        className="cursor-pointer mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                        Chọn ảnh
-                    </label>
+                    <div className="flex justify-center gap-4 mt-4">
+                        {/* Nút chọn ảnh */}
+                        <label
+                            htmlFor="avatarUpload"
+                            className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                            Chọn ảnh
+                        </label>
+
+                        {/* Nút đồng ý */}
+                        <button
+                            onClick={uploadImage}
+                            disabled={!image}
+                            className={`px-4 py-2 rounded text-white transition
+      ${image ? "bg-green-600 hover:bg-green-700 cursor-pointer" : "bg-gray-400 cursor-not-allowed opacity-50"}
+    `}
+                        >
+                            Đồng ý
+                        </button>
+                    </div>
+
                 </div>
 
             </div>

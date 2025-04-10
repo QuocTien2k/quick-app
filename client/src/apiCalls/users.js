@@ -33,3 +33,17 @@ export const getLoggedUser = async () => {
     throw new Error("Không thể lấy người dùng. Vui lòng thử lại.");
   }
 };
+
+//user upload image
+export const uploadProfilePic = async (image) => {
+  try {
+    const response = await axiosInstance.post("/api/user/upload-profile-pic", {
+      image,
+    });
+
+    return response?.data;
+  } catch (error) {
+    console.error("Lỗi khi tải ảnh:", error?.message);
+    throw new Error("Không thể tải ảnh. Vui lòng thử lại.");
+  }
+};

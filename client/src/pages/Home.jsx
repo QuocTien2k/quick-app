@@ -18,9 +18,8 @@ const Home = () => {
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const [token, setToken] = useState(localStorage.getItem("token"));
-    const [currentUser, setCurrentUser] = useState(null);
     const { selectedChat, allChats, user } = useSelector((state) => state.user);
-    const [onlineUser, setOnlineUser] = useState()
+    const [onlineUser, setOnlineUser] = useState();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     // const userState = useSelector((state) => state.user); 
     // console.log("User state:", userState); 
@@ -54,7 +53,6 @@ const Home = () => {
                     }
                     // Lưu thông tin người dùng hiện tại vào Redux
                     dispatch(setUser(loggedUserRes?.data)); // Dispatch thông tin người dùng vào Redux
-                    setCurrentUser(loggedUserRes?.data); // Lưu thông tin người dùng hiện tại
 
                     // Nếu token hợp lệ, lấy danh sách trừ user hiện tại
                     const usersRes = await getAllUsers();
@@ -102,14 +100,14 @@ const Home = () => {
 
     // Xử lý chat
     const openChat = async (selectedUserId) => {
-        if (!currentUser) {
+        if (!user) {
             toast.error("Vui lòng đăng nhập để trò chuyện!");
             return;
         }
 
         // Tìm xem đã có cuộc trò chuyện chưa
         const chat = allChats?.find(chat =>
-            chat.members.map(m => m._id).includes(currentUser._id) &&
+            chat.members.map(m => m._id).includes(user._id) &&
             chat.members.map(m => m._id).includes(selectedUserId)
         );
 
@@ -135,7 +133,7 @@ const Home = () => {
             toast.success("Đã mở cuộc trò chuyện!");
         } else {
             // Nếu chưa có chat → tạo mới
-            const newChat = await startNewChat(currentUser._id, selectedUserId);
+            const newChat = await startNewChat(user._id, selectedUserId);
             if (newChat) {
                 dispatch(setSelectedChat(newChat));
             }
@@ -195,7 +193,7 @@ const Home = () => {
         if (!chat || !chat.lastMessage) {
             return "";
         } else {
-            const msgPrefix = chat?.lastMessage?.sender === currentUser._id ? "Bạn: " : `Tin nhắn từ ${userLastname}: `;
+            const msgPrefix = chat?.lastMessage?.sender === user._id ? "Bạn: " : `Tin nhắn từ ${userLastname}: `;
             return msgPrefix + chat?.lastMessage?.text?.substring(0, 20);
         }
     }
@@ -206,7 +204,7 @@ const Home = () => {
             chat.members.map(m => m._id).includes(userId)
         )
 
-        if (chat && chat.unreadMessageCount && chat.lastMessage.sender !== currentUser._id) {
+        if (chat && chat.unreadMessageCount && chat.lastMessage.sender !== user._id) {
             return chat.unreadMessageCount
         } else {
             return 0;
@@ -219,12 +217,12 @@ const Home = () => {
     };
 
     //console.log("User hiện tại: ", user);
-    console.log("User hiện tại: ", currentUser);
+    //console.log("User hiện tại: ", currentUser);
 
     return (
         <>
             <div className="p-4">
-                {!currentUser ? (
+                {!user ? (
                     <button
                         onClick={() => navigate("/login")}
                         className="cursor-pointer px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
@@ -234,15 +232,15 @@ const Home = () => {
                 ) : (
                     <div className="flex items-center justify-between bg-white p-4 rounded-lg">
                         <h3 className="text-xl font-semibold text-blue-600 flex items-center gap-2">
-                            👋 Xin chào, <span className="text-gray-800">{currentUser.firstname} {currentUser.lastname}</span>!
+                            👋 Xin chào, <span className="text-gray-800">{user.firstname} {user.lastname}</span>!
                         </h3>
 
                         <div className="cursor-pointer" onClick={handleAvatarClick}>
-                            {currentUser.profilePic ? (
+                            {user.profilePic ? (
                                 // Hiển thị hình ảnh
                                 <div className="w-12 h-12 rounded-full overflow-hidden">
                                     <img
-                                        src={currentUser.profilePic}
+                                        src={user.profilePic}
                                         alt="User Avatar"
                                         className="w-full h-full object-cover"
                                     />
@@ -250,7 +248,7 @@ const Home = () => {
                             ) : (
                                 // Nếu không có hình thì hiển thị chữ cái đầu
                                 <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-600">
-                                    {currentUser.firstname?.charAt(0).toUpperCase()}
+                                    {user.firstname?.charAt(0).toUpperCase()}
                                 </div>
                             )}
                         </div>
@@ -297,9 +295,21 @@ const Home = () => {
 
                             >
                                 <div className="flex items-center space-x-4 mb-3">
-                                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-600">
-                                        {user.firstname?.charAt(0).toUpperCase() || "?"}
-                                    </div>
+                                    {user.profilePic ? (
+                                        // Hiển thị hình ảnh
+                                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                                            <img
+                                                src={user.profilePic}
+                                                alt="User Avatar"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    ) : (
+                                        // Nếu không có hình thì hiển thị chữ cái đầu
+                                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-600">
+                                            {user.firstname?.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
                                     <div>
                                         <h2 className="text-lg font-semibold">Xin chào,{user.firstname} {user.lastname}</h2>
                                         <p className="text-sm text-gray-600">{user.email}</p>
