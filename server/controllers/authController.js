@@ -1,7 +1,9 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const userModel = require("../models/user");
+const sendEmail = require("../utils/sendEmail");
 
 //route signup
 router.post("/signup", async (req, res) => {
@@ -47,7 +49,7 @@ router.post("/login", async (req, res) => {
       .select("+password");
     //console.log("User data from database:", user);
     if (!user) {
-      return res.status(400).send({
+      return res.status(401).send({
         message: "Email không tồn tại hoặc chưa đăng ký",
         success: false,
       });
@@ -57,7 +59,7 @@ router.post("/login", async (req, res) => {
     const isValid = await bcrypt.compare(req.body.password, user.password);
     //console.log("Password comparison:", isValid);
     if (!isValid) {
-      return res.status(400).send({
+      return res.status(401).send({
         message: "Mật khẩu không đúng",
         success: false,
       });
@@ -82,6 +84,103 @@ router.post("/login", async (req, res) => {
     res.status(400).send({
       message: `Đăng nhập thất bại : ${error.message}`,
       success: false,
+    });
+  }
+});
+
+//route forgot password
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // 1. Tìm user theo email
+    const user = await userModel.findOne({ email });
+    //console.log("Thông tin của user là: ", user);
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "Email không tồn tại trong hệ thống",
+      });
+    }
+
+    // 2. Tạo reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // 3. Gán vào user và lưu lại
+    user.resetPasswordToken = resetToken;
+    await user.save();
+
+    // 4. Tạo link reset
+    const resetLink = `https://quick-chat/reset-password?token=${resetToken}`;
+
+    // 5. Gửi email
+    const htmlContent = `
+      <h2>Yêu cầu đặt lại mật khẩu</h2>
+      <p>Bạn đã yêu cầu đặt lại mật khẩu. Nhấn vào link bên dưới để tiếp tục:</p>
+      <a href="${resetLink}" target="_blank">${resetLink}</a>
+      <p>Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.</p>
+    `;
+
+    await sendEmail(user.email, "Đặt lại mật khẩu - ShopQT", htmlContent);
+
+    res.status(200).send({
+      success: true,
+      message: "Đã gửi email đặt lại mật khẩu",
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Lỗi server khi gửi mail: " + error.message,
+    });
+  }
+});
+
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).send({
+        success: false,
+        message: "Thiếu token",
+      });
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).send({
+        success: false,
+        message: "Mật khẩu mới không hợp lệ (ít nhất 6 ký tự)",
+      });
+    }
+
+    // Tìm user có token này
+    const user = await userModel.findOne({ resetPasswordToken: token });
+    if (!user) {
+      return res.status(400).send({
+        success: false,
+        message: "Token không hợp lệ hoặc đã hết hạn",
+      });
+    }
+
+    // Hash mật khẩu mới
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    // Xóa token
+    user.resetPasswordToken = undefined;
+
+    // Lưu lại
+    await user.save();
+
+    res.status(200).send({
+      success: true,
+      message: "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập lại.",
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Lỗi server: " + error.message,
     });
   }
 });

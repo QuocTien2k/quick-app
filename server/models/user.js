@@ -22,7 +22,12 @@ const userSchema = new mongoose.Schema(
     },
     profilePic: {
       type: String,
-      require: false,
+      required: false,
+    },
+    resetPasswordToken: {
+      type: String,
+      default: null,
+      select: false, // không cần trả về khi query user
     },
   },
   { timestamps: true }
