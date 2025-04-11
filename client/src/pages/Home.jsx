@@ -35,6 +35,12 @@ const Home = () => {
                 //console.log(onlineUsers);
                 setOnlineUser(onlineUsers);
             })
+
+            //update lại khi có user logout
+            socket.on("online-users-updated", onlineUsers => {
+                //console.log(onlineUsers);
+                setOnlineUser(onlineUsers);
+            })
         }
     }, [user]);
 
@@ -221,10 +227,23 @@ const Home = () => {
         }
     }
 
-    //xử lý khi update 
+    //xử lý khi update avatar
     const handleAvatarClick = () => {
         setIsProfileOpen(true);
     };
+
+    //logout
+    const logout = () => {
+        alert("Bạn muốn đăng xuất?");
+
+        socket.emit("user-offline", user._id);
+
+        localStorage.removeItem("token");
+
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 200); // delay một chút để đảm bảo sự kiện được gửi đi
+    }
 
     //console.log("User hiện tại: ", user);
     //console.log("User hiện tại: ", currentUser);
@@ -277,7 +296,7 @@ const Home = () => {
                                 socket={socket}
                             />
                             <button
-                                onClick={() => console.log("Đăng xuất")}
+                                onClick={logout}
                                 className="cursor-pointer px-5 py-2 bg-red-600 text-white font-medium rounded-lg shadow-md 
                    hover:bg-red-700 hover:shadow-lg transition-all duration-300"
                             >
