@@ -261,15 +261,18 @@ const Home = () => {
                         Đăng nhập
                     </button>
                 ) : (
-                    <div className="flex items-center justify-between bg-white p-4 rounded-lg">
-                        <h3 className="text-xl font-semibold text-blue-600 flex items-center gap-2">
-                            👋 Xin chào, <span className="text-gray-800">{user.firstname} {user.lastname}</span>!
-                        </h3>
+                    <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-md gap-4 flex-wrap">
+                        {/* Lời chào user */}
+                        <div className="flex-1 min-w-[200px]">
+                            <h3 className="text-xl font-semibold text-blue-600 flex items-center gap-2">
+                                👋 Xin chào, <span className="text-gray-800">{user.firstname} {user.lastname}</span>!
+                            </h3>
+                        </div>
 
+                        {/* Avatar */}
                         <div className="cursor-pointer" onClick={handleAvatarClick}>
                             {user.profilePic ? (
-                                // Hiển thị hình ảnh
-                                <div className="w-12 h-12 rounded-full overflow-hidden">
+                                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-400 shadow-sm">
                                     <img
                                         src={user.profilePic}
                                         alt="User Avatar"
@@ -277,19 +280,17 @@ const Home = () => {
                                     />
                                 </div>
                             ) : (
-                                // Nếu không có hình thì hiển thị chữ cái đầu
-                                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-600">
+                                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-600 border-2 border-blue-400">
                                     {user.firstname?.charAt(0).toUpperCase()}
                                 </div>
                             )}
                         </div>
 
+                        {/* Profile chi tiết */}
                         {isProfileOpen && <Profile user={user} onClose={() => setIsProfileOpen(false)} />}
 
-                        {/* Notice and button logout */}
-                        <div className="flex items-center justify-between gap-1">
-
-                            {/* 1 cái chuông thông báo tin nhắn chưa đọc */}
+                        {/* Notification + Logout */}
+                        <div className="flex items-center gap-3">
                             <MessageNotification
                                 listUsers={listUsers}
                                 getUnreadMessageCount={getUnreadMessageCount}
@@ -299,16 +300,15 @@ const Home = () => {
                             />
                             <button
                                 onClick={logout}
-                                className="cursor-pointer px-5 py-2 bg-red-600 text-white font-medium rounded-lg shadow-md 
-                   hover:bg-red-700 hover:shadow-lg transition-all duration-300"
+                                className="cursor-pointer px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 shadow transition-all duration-300"
                             >
                                 Đăng xuất
                             </button>
                         </div>
                     </div>
-
                 )}
-                <div className="border-b-2 border-gray-200 pb-2 mb-6">
+
+                <div className="border-b-2 border-gray-200 pb-2 my-6">
                     <h1 className="text-2xl font-bold text-gray-800 text-center">
                         📜 Danh sách người dùng
                     </h1>
