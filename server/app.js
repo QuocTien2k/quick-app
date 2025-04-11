@@ -72,7 +72,7 @@ io.on("connection", (socket) => {
   socket.on("user-offline", (userId) => {
     //onlineUsers = onlineUsers.filter((user) => user._id !== userId); dùng khi mảng chứa object phức tạp
     onlineUsers.splice(onlineUsers.indexOf(userId), 1);
-    console.log("Danh sách user online: ", onlineUsers);
+    console.log("Danh sách user online đã cập nhật: ", onlineUsers);
 
     io.emit("online-users-updated", onlineUsers);
   });
