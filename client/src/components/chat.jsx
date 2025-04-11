@@ -227,12 +227,12 @@ const ChatArea = ({ socket, onlineUser }) => {
                     <div className="flex items-center gap-2">
                         💬 Chat với
                         <span className="flex items-center gap-1">
-                            {selectedUser.firstname} {selectedUser.lastname}
+                            {selectedUser.lastname}
                             {onlineUser?.includes(selectedUser._id) && (
                                 <span
-                                    className="w-2 h-2 rounded-full bg-green-500 animate-pulse"
+                                    className="text-[11px] animate-pulse"
                                     title="Đang online"
-                                ></span>
+                                >(Đang online)</span>
                             )}
                         </span>
                     </div>

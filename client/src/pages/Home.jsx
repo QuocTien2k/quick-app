@@ -31,16 +31,18 @@ const Home = () => {
             socket.emit("join-room", user._id);
             socket.emit("user-login", user._id);
 
-            socket.on("online-users", onlineUsers => {
-                //console.log(onlineUsers);
-                setOnlineUser(onlineUsers);
-            })
+            //lưu user online
+            const handleOnlineUsers = (onlineUsers) => setOnlineUser(onlineUsers);
+            //cập nhật user online khi có user logout
+            const handleUpdatedOnlineUsers = (onlineUsers) => setOnlineUser(onlineUsers);
 
-            //update lại khi có user logout
-            socket.on("online-users-updated", onlineUsers => {
-                //console.log(onlineUsers);
-                setOnlineUser(onlineUsers);
-            })
+            socket.on("online-users", handleOnlineUsers);
+            socket.on("online-users-updated", handleUpdatedOnlineUsers);
+
+            return () => {
+                socket.off("online-users", handleOnlineUsers);
+                socket.off("online-users-updated", handleUpdatedOnlineUsers);
+            };
         }
     }, [user]);
 
