@@ -2,42 +2,45 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { loginUser } from '../apiCalls/auth';
 import { toast } from 'react-hot-toast';
-import { useDispatch } from 'react-redux';
-import { hideLoader, showLoader } from '../redux/loaderSlice';
+
 const Login = () => {
     const [user, setUser] = useState({
         email: '',
         password: ''
     })
-    const dispatch = useDispatch();
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         //console.log(user);
         let response = null;
-
         try {
-            dispatch(showLoader());
+            setLoading(true);
             response = await loginUser(user);
-            dispatch(hideLoader());
+
             // console.log("Server response:", response)
             //console.log("response message:", response?.message)
             //console.log("response token:", response?.token)
-
 
             if (response?.success) {
                 toast.success(response?.message);
                 // Lưu token vào localStorage
                 localStorage.setItem('token', response?.token);
-                window.location.href = '/'
+
+                // Delay 600ms trước khi chuyển trang
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 600);
+
             } else {
                 toast.error(response?.message);
             }
         } catch (error) {
             toast.error(response?.message || "Có lỗi xảy ra!");
             console.error("Lỗi đăng nhập ", error);
-            dispatch(hideLoader());
+            setLoading(false);
         }
+        setLoading(false);
     };
 
     return (
@@ -57,6 +60,7 @@ const Login = () => {
                             className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                             placeholder="Nhập email"
                             required
+                            disabled={loading}
                         />
                     </div>
 
@@ -72,6 +76,7 @@ const Login = () => {
                             className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                             placeholder="Nhập mật khẩu"
                             required
+                            disabled={loading}
                         />
                     </div>
 
@@ -79,20 +84,31 @@ const Login = () => {
                     <div className="mb-4">
                         <button
                             type="submit"
-                            className="cursor-pointer w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+                            disabled={loading}
+                            className={`w-full text-white py-2 rounded transition ${loading ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"
+                                }`}
                         >
                             Đăng nhập
                         </button>
                     </div>
                 </form>
 
-                {/* Signup Link */}
-                <p className="text-center text-sm text-gray-600">
-                    Chưa có tài khoản?{' '}
-                    <Link to="/signup" className="text-indigo-600 hover:text-indigo-700">
-                        Đăng ký
-                    </Link>
-                </p>
+                <div className="flex flex-col items-center gap-2 mt-4">
+                    {/* Signup Link */}
+                    <p className="text-sm text-gray-600">
+                        Chưa có tài khoản?{' '}
+                        <Link to="/signup" className="text-indigo-600 hover:text-indigo-700">
+                            Đăng ký
+                        </Link>
+                    </p>
+
+                    {/* Forgot Password Link */}
+                    <p className="text-sm text-gray-600">
+                        <Link to="/forgot-password" className="text-indigo-600 hover:text-indigo-700">
+                            Quên mật khẩu?
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     );

@@ -16,7 +16,7 @@ const ChatArea = ({ socket, onlineUser }) => {
     const dispatch = useDispatch();
     const [message, setMessage] = useState("");
     const [allMessages, setAllMessages] = useState([]);
-    const { selectedChat, allUsers, user, allChats } = useSelector((state) => state.user);
+    const { selectedChat, allUsers, allUsersLoaded, user, allChats } = useSelector((state) => state.user);
     const messagesEndRef = useRef(null);
     const [showEmoji, setShowEmoji] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -30,7 +30,9 @@ const ChatArea = ({ socket, onlineUser }) => {
     //console.log("ID người dùng được chọn: ", selectedUserId);
 
     // Search user from allUsers on ID
-    const selectedUser = allUsers.find((user) => user._id === selectedUserId);
+    const selectedUser =
+        allUsers.find((user) => user._id === selectedUserId) ||
+        selectedChat?.members?.find((member) => member._id !== user._id);
     // console.log("Người dùng được chọn: ", selectedUser);
     // console.log("Danh sách user online: ", onlineUser);
 
@@ -159,6 +161,17 @@ const ChatArea = ({ socket, onlineUser }) => {
         }
     }
 
+    useEffect(() => {
+        if (selectedChat && user && allUsersLoaded) {
+            const selectedUserId = selectedChat.members.find(m => m._id !== user._id)?._id;
+            const selectedUser = allUsers.find(u => u._id === selectedUserId);
+
+            if (!selectedUser) {
+                toast.error("Không tìm thấy người dùng trong danh sách.");
+            }
+        }
+    }, [selectedChat, user, allUsersLoaded]);
+
     //theo dõi để cuộn
     useEffect(() => {
         if (messagesEndRef.current) {
@@ -219,6 +232,9 @@ const ChatArea = ({ socket, onlineUser }) => {
     //console.log("Tất cả tin nhắn: ", allMessages);
     //console.log("Danh sách tin nhắn: ", allChats)
 
+    if (selectedChat && !selectedUser) {
+        return <div className="text-gray-500 px-4 py-2">Đang tải thông tin người dùng...</div>;
+    }
     return (
         <div className="fixed bottom-4 right-4 w-[320px] sm:w-[360px] h-[360px] bg-white rounded-lg shadow-lg flex flex-col p-3 z-50">
             {/* Chat với ai */}

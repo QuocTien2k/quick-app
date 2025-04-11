@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { hideLoader, showLoader } from "../redux/loaderSlice";
 import { createNewChat, getAllChats } from "../apiCalls/chat";
-import { setAllChats, setAllUsers, setSelectedChat, setUser } from "../redux/usersSlice";
+import { resetAllUsersLoaded, setAllChats, setAllUsers, setSelectedChat, setUser } from "../redux/usersSlice";
 import ChatArea from "../components/chat";
 import MessageNotification from "../components/MessageNotification";
 import io from "socket.io-client"
@@ -71,7 +71,7 @@ const Home = () => {
                     } else {
                         throw new Error(usersRes?.message);
                     }
-                    getCurrentChat(); // Gọi hàm lấy danh sách chat hiện tại
+                    await getCurrentChat(); // Gọi hàm lấy danh sách chat hiện tại
                     //dispatch(setAllUsers(usersRes.data));
                 } else {
                     // Nếu không có token, lấy toàn bộ danh sách
@@ -215,7 +215,6 @@ const Home = () => {
         return prefix + content;
     };
 
-
     //lấy tin nhắn chưa đọc
     const getUnreadMessageCount = (userId) => {
         const chat = allChats.find(chat =>
@@ -241,6 +240,8 @@ const Home = () => {
         socket.emit("user-offline", user._id);
 
         localStorage.removeItem("token");
+        dispatch(setAllUsers([]));
+        dispatch(resetAllUsersLoaded());
 
         setTimeout(() => {
             window.location.href = "/";

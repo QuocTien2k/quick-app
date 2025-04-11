@@ -5,6 +5,8 @@ import Signup from "./pages/Signup";
 import { Toaster } from "react-hot-toast";
 import Loader from "./components/loader";
 import { useSelector } from "react-redux";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   const { loading } = useSelector((state) => state.loader.loader);
@@ -17,6 +19,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </BrowserRouter>
     </>
