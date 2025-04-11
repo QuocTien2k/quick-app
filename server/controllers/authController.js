@@ -111,7 +111,7 @@ router.post("/forgot-password", async (req, res) => {
     await user.save();
 
     // 4. Tạo link reset
-    const resetLink = `https://quick-chat/reset-password?token=${resetToken}`;
+    const resetLink = `http://localhost:5173/reset-password?token=${resetToken}`;
 
     // 5. Gửi email
     const htmlContent = `
@@ -121,7 +121,7 @@ router.post("/forgot-password", async (req, res) => {
       <p>Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.</p>
     `;
 
-    await sendEmail(user.email, "Đặt lại mật khẩu - ShopQT", htmlContent);
+    await sendEmail(user.email, "Đặt lại mật khẩu - QuickChat", htmlContent);
 
     res.status(200).send({
       success: true,
