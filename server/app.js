@@ -67,5 +67,14 @@ io.on("connection", (socket) => {
     console.log("Danh sách user online: ", onlineUsers);
     socket.emit("online-users", onlineUsers);
   });
+
+  //lắng nghe khi user loggout
+  socket.on("user-offline", (userId) => {
+    //onlineUsers = onlineUsers.filter((user) => user._id !== userId); dùng khi mảng chứa object phức tạp
+    onlineUsers.splice(onlineUsers.indexOf(userId), 1);
+    console.log("Danh sách user online: ", onlineUsers);
+
+    io.emit("online-users-updated", onlineUsers);
+  });
 });
 module.exports = server;
