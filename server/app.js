@@ -39,13 +39,15 @@ io.on("connection", (socket) => {
 
   //lắng nghe client khi user đăng nhập từ browser, tham gia chat
   socket.on("join-room", (userId) => {
-    console.log("User join room: " + userId);
+    //console.log("User tham gia: " + userId);
+    //console.log("Vào lúc: ", new Date().toLocaleString());
     socket.join(userId);
   });
 
   //lắng nghe gửi tin từ client và gửi lại tin để client nhận
   socket.on("send-message", (message) => {
     //console.log("message nhận được: ", message);
+    //console.log("Nhận vào lúc: ", new Date().toLocaleString());
     io.to(message.members[0]) //người gửi
       .to(message.members[1]) //người nhận
       .emit("receive-message", message);
@@ -53,7 +55,8 @@ io.on("connection", (socket) => {
 
   //lắng nghe gửi tin chưa đọc từ client và gửi lại tin khi đã đọc
   socket.on("clear-unread-messages", (data) => {
-    //console.log(data);
+    //console.log("Tin nhắn chưa đọc: ", data);
+    //console.log("Nhận vào lúc: ", new Date().toLocaleString());
     io.to(data.members[0])
       .to(data.members[1])
       .emit("message-count-cleared", data);
@@ -64,7 +67,8 @@ io.on("connection", (socket) => {
     if (!onlineUsers.includes(userId)) {
       onlineUsers.push(userId);
     }
-    console.log("Danh sách user online: ", onlineUsers);
+    //console.log("Danh sách user online: ", onlineUsers);
+    //console.log("Vào lúc: ", new Date().toLocaleString());
     socket.emit("online-users", onlineUsers);
   });
 
@@ -72,8 +76,11 @@ io.on("connection", (socket) => {
   socket.on("user-offline", (userId) => {
     //onlineUsers = onlineUsers.filter((user) => user._id !== userId); dùng khi mảng chứa object phức tạp
     onlineUsers.splice(onlineUsers.indexOf(userId), 1);
-    console.log("Danh sách user online đã cập nhật: ", onlineUsers);
-
+    console.log(
+      "Danh sách user online đã cập nhật khi user offline hoặc reload trang: ",
+      onlineUsers
+    );
+    //console.log("Vào lúc: ", new Date().toLocaleString());
     io.emit("online-users-updated", onlineUsers);
   });
 });
