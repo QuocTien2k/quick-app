@@ -30,7 +30,7 @@ const Login = () => {
                 // Delay 600ms trước khi chuyển trang
                 setTimeout(() => {
                     window.location.href = '/';
-                }, 600);
+                }, 1400);
 
             } else {
                 toast.error(response?.message);

@@ -71,7 +71,9 @@ const Home = () => {
                     } else {
                         throw new Error(usersRes?.message);
                     }
-                    await getCurrentChat(); // Gọi hàm lấy danh sách chat hiện tại
+                    setTimeout(async () => {
+                        await getCurrentChat(); // Gọi hàm lấy danh sách chat hiện tại
+                    }, 800)
                     //dispatch(setAllUsers(usersRes.data));
                 } else {
                     // Nếu không có token, lấy toàn bộ danh sách
@@ -120,7 +122,10 @@ const Home = () => {
         );
 
         if (chat) {
-            dispatch(setSelectedChat(chat)); // Mở cuộc trò chuyện
+            //dispatch(setSelectedChat(chat)); // Mở cuộc trò chuyện
+            setTimeout(() => {
+                dispatch(setSelectedChat(chat));
+            }, 1000);
 
             // ✅ Cập nhật Redux: đánh dấu đã đọc
             const updatedChats = allChats.map(c => {
@@ -143,7 +148,10 @@ const Home = () => {
             // Nếu chưa có chat → tạo mới
             const newChat = await startNewChat(user._id, selectedUserId);
             if (newChat) {
-                dispatch(setSelectedChat(newChat));
+                //dispatch(setSelectedChat(newChat));
+                setTimeout(() => {
+                    dispatch(setSelectedChat(newChat));
+                }, 1000);
             }
         }
     };
@@ -368,7 +376,9 @@ const Home = () => {
                     </div>
                 )}
 
-                {selectedChat && <ChatArea onlineUser={onlineUser} socket={socket} />}
+                {selectedChat && listUsers.length > 0 && (
+                    <ChatArea onlineUser={onlineUser} socket={socket} />
+                )}
 
             </div>
         </>

@@ -9,7 +9,7 @@ const MessageNotification = ({ listUsers, getUnreadMessageCount, getLastMessage,
     const selectedChatRef = useRef(selectedChat);
     const allChatsRef = useRef(allChats);
     // console.log(selectedChat);
-    // console.log(allChats);
+    console.log("Danh sách chat: ", allChats);
 
     useEffect(() => {
         selectedChatRef.current = selectedChat;
@@ -29,10 +29,16 @@ const MessageNotification = ({ listUsers, getUnreadMessageCount, getLastMessage,
         getLastMessage(user._id, user.lastname)
     );
 
+    //console.log("Danh sách user: ", listUsers);
+    //console.log("user có tin nhắn gửi bạn:  ", usersWithMessages);
+
     //lắng nghe để theo dõi tin nhăn từ server
+    /*
     useEffect(() => {
         const handleMessage = (message) => {
             //console.log(message);
+            console.log("Tin nhắn nhận từ server: ", message)
+            console.log("Nhận vào lúc: ", new Date().toLocaleString())
 
             const selectChat = selectedChatRef.current;
             const getAllChats = allChatsRef.current;
@@ -58,6 +64,53 @@ const MessageNotification = ({ listUsers, getUnreadMessageCount, getLastMessage,
             socket.off("receive-message", handleMessage);
         };
     }, []);
+    */
+    useEffect(() => {
+        const handleMessage = (message) => {
+            console.log("Tin nhắn nhận từ server: ", message);
+            console.log("Nhận vào lúc: ", new Date().toLocaleString());
+
+            const selectChat = selectedChatRef.current;
+            const getAllChats = allChatsRef.current;
+
+            const isExistingChat = getAllChats.some(chat => chat._id === message.chatId);
+
+            // 👉 Nếu là cuộc trò chuyện mới (chưa có trong allChats)
+            if (!isExistingChat) {
+                const newChat = {
+                    _id: message.chatId,
+                    members: message.members.map(id => ({ _id: id })),
+                    lastMessage: message,
+                    unreadMessageCount: 1,
+                    createdAt: message.createdAt,
+                };
+                dispatch(setAllChats([...getAllChats, newChat]));
+                return; // dừng lại ở đây, tránh cập nhật tiếp bên dưới
+            }
+
+            // 👉 Nếu đã tồn tại chat, thì cập nhật như cũ
+            if (selectChat?._id !== message.chatId) {
+                const updatedChats = getAllChats.map(chat => {
+                    if (chat._id === message.chatId) {
+                        return {
+                            ...chat,
+                            unreadMessageCount: (chat?.unreadMessageCount || 0) + 1,
+                            lastMessage: message
+                        };
+                    }
+                    return chat;
+                });
+                dispatch(setAllChats(updatedChats));
+            }
+        };
+
+        socket.on("receive-message", handleMessage);
+
+        return () => {
+            socket.off("receive-message", handleMessage);
+        };
+    }, []);
+
 
     return (
         <div className="relative">
