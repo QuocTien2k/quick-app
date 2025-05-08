@@ -21,8 +21,14 @@ const userSchema = new mongoose.Schema(
       unique: true,
     },
     profilePic: {
-      type: String,
-      required: false,
+      url: {
+        type: String,
+        required: false,
+      },
+      public_id: {
+        type: String,
+        required: false,
+      },
     },
     resetPasswordToken: {
       type: String,
