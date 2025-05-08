@@ -14,7 +14,7 @@ const Profile = ({ user, onClose }) => {
     useEffect(() => {
 
         if (user?.profilePic) {
-            setImage(user.profilePic);
+            setImage(user.profilePic.url);
         }
     }, [user])
 

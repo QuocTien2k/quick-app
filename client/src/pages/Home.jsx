@@ -283,7 +283,7 @@ const Home = () => {
                             {user.profilePic ? (
                                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-400 shadow-sm">
                                     <img
-                                        src={user.profilePic}
+                                        src={user.profilePic.url}
                                         alt="User Avatar"
                                         className="w-full h-full object-cover"
                                     />
@@ -339,7 +339,7 @@ const Home = () => {
                                         // Hiển thị hình ảnh
                                         <div className="w-12 h-12 rounded-full overflow-hidden">
                                             <img
-                                                src={user.profilePic}
+                                                src={user.profilePic.url}
                                                 alt="User Avatar"
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => {
