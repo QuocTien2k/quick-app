@@ -84,20 +84,35 @@ router.post("/upload-profile-pic", protect, async (req, res) => {
         .json({ success: false, message: "Không có ảnh nào được gửi lên." });
     }
 
+    // Lấy user hiện tại từ DB
+    const currentUser = await userModel.findById(req.user.id);
+
+    // Nếu có avatar cũ → xóa ảnh khỏi Cloudinary
+    if (currentUser.profilePic?.public_id) {
+      await cloudinary.uploader.destroy(currentUser.profilePic.public_id);
+    }
+
+    // Upload ảnh mới
     const uploadedImage = await cloudinary.uploader.upload(image, {
       folder: "quick-chat",
     });
 
-    const user = await userModel.findByIdAndUpdate(
-      req.user.id, // lấy từ middleware
-      { profilePic: uploadedImage.secure_url },
+    // Cập nhật DB với avatar mới
+    const updatedUser = await userModel.findByIdAndUpdate(
+      req.user.id,
+      {
+        profilePic: {
+          url: uploadedImage.secure_url,
+          public_id: uploadedImage.public_id,
+        },
+      },
       { new: true }
     );
 
     res.status(201).send({
       message: "Tải ảnh thành công",
       success: true,
-      data: user,
+      data: updatedUser,
     });
   } catch (error) {
     res.status(400).send({
