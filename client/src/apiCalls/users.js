@@ -44,6 +44,17 @@ export const uploadProfilePic = async (image) => {
     return response?.data;
   } catch (error) {
     console.error("Lỗi khi tải ảnh:", error?.message);
-    throw new Error("Không thể tải ảnh. Vui lòng thử lại.");
+    // Bổ sung xử lý lỗi payload lớn
+    if (
+      error?.response?.status === 413 ||
+      error?.message.includes("Payload Too Large")
+    ) {
+      throw new Error("Ảnh bạn chọn vượt quá dung lượng cho phép.");
+    }
+
+    // Trường hợp lỗi khác (ví dụ không có internet)
+    throw new Error(
+      error?.response?.data?.message || "Lỗi không xác định khi tải ảnh."
+    );
   }
 };
